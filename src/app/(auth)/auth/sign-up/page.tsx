@@ -28,6 +28,13 @@ export default function SignUpPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      username: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   async function onSubmit(data: RegisterInput) {
@@ -37,6 +44,7 @@ export default function SignUpPage() {
     const response = await signUp.email({
       name: data.name,
       email: data.email,
+      username: data.username,
       password: data.password,
     });
 
@@ -81,6 +89,14 @@ export default function SignUpPage() {
 
             <FormField name="name" label="Name" required>
               <Input type="text" placeholder="John Doe" autoComplete="name" />
+            </FormField>
+
+            <FormField name="username" label="Username" required>
+              <Input
+                type="text"
+                placeholder="john.doe"
+                autoComplete="username"
+              />
             </FormField>
 
             <FormField name="email" label="Email" required>

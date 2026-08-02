@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import {
   Plug,
   LayoutDashboard,
@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { setSidebarCollapsed } from "@/actions/sidebar";
 import { SidebarItem, SidebarSectionTitle, SidebarSeparator } from "./sidebar-components";
 
 interface NavItem {
@@ -50,11 +51,21 @@ const backendNav: NavItem[] = [
 ];
 
 interface DashboardSidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
+  initialCollapsed: boolean;
 }
 
-export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
+export function DashboardSidebar({ initialCollapsed }: DashboardSidebarProps) {
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const [isPending, startTransition] = useTransition();
+
+  const handleToggle = () => {
+    const newValue = !collapsed;
+    setCollapsed(newValue);
+    startTransition(() => {
+      setSidebarCollapsed(newValue);
+    });
+  };
+
   return (
     <aside
       className={cn(
@@ -89,7 +100,7 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
       <div className="border-border/50 border-t p-2">
         <button
           type="button"
-          onClick={onToggle}
+          onClick={handleToggle}
           className={cn(
             "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
             collapsed && "justify-center px-0"

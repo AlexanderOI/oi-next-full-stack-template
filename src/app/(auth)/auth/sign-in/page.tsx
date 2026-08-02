@@ -27,16 +27,27 @@ export default function SignInPage() {
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      identifier: "",
+      password: "",
+    },
   });
 
   async function onSubmit(data: LoginInput) {
     setIsLoading(true);
     setError(null);
 
-    const response = await signIn.email({
-      email: data.email,
-      password: data.password,
-    });
+    const isEmail = data.identifier.includes("@");
+
+    const response = isEmail
+      ? await signIn.email({
+          email: data.identifier,
+          password: data.password,
+        })
+      : await signIn.username({
+          username: data.identifier,
+          password: data.password,
+        });
 
     if (response.error) {
       setError(response.error.message ?? "An unknown error occurred");
@@ -77,8 +88,8 @@ export default function SignInPage() {
               </div>
             )}
 
-            <FormField name="email" label="Email" required>
-              <Input type="email" placeholder="you@example.com" autoComplete="email" />
+            <FormField name="identifier" label="Email or Username" required>
+              <Input type="text" placeholder="you@example.com or username" autoComplete="username" />
             </FormField>
 
             <FormField name="password" label="Password" required>
