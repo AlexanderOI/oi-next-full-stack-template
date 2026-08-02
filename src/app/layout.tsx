@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "oi-nextjs",
-  description: "Next.js template with authentication, theming, and AI-agentic friendly architecture",
+  description:
+    "Next.js template with authentication, theming, and AI-agentic friendly architecture",
 };
 
 export default function RootLayout({
@@ -24,8 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable}`}
+    >
+      <body className="antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

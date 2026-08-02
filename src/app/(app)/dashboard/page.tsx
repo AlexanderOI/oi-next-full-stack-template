@@ -1,68 +1,28 @@
 "use client";
 
-import { useSession } from "@/lib/auth";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Clock } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/dashboard/page-header";
 
-export default function DashboardPage() {
-  const { data: session } = useSession();
-
+export default function BackupsPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {session?.user?.name ?? "User"}
-        </p>
-      </div>
+    <div className="mx-auto max-w-4xl space-y-8">
+      <PageHeader title="Dashboard" breadcrumbLabel="Dashboard" />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Getting Started</CardTitle>
-            <CardDescription>Your template is ready</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              This is your dashboard. Start building your app by adding features,
-              components, and pages.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Authentication</CardTitle>
-            <CardDescription>Connected to NestJS backend</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Auth is configured with better-auth client pointing to your NestJS API.
-              Email/password and Google OAuth are ready.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Stack</CardTitle>
-            <CardDescription>What&apos;s included</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Next.js 16 + React 19</li>
-              <li>• shadcn/ui + Tailwind v4</li>
-              <li>• Zustand + React Query</li>
-              <li>• Zod + React Hook Form</li>
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-600/15">
+              <Clock className="size-4.5 text-emerald-400" />
+            </div>
+            <div>
+              <CardTitle className="text-base">No content yet.</CardTitle>
+              <CardDescription>No content yet.</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">No content yet.</CardContent>
+      </Card>
     </div>
   );
 }
