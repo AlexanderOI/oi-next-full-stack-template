@@ -2,8 +2,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getSidebarCollapsed } from "@/actions/sidebar";
-import { DashboardHeader } from "@/components/dashboard/header";
-import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { DashboardHeader } from "@/features/dashboard/components/header";
+import { DashboardSidebar } from "@/features/dashboard/components/sidebar";
 import type { ReactNode } from "react";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
