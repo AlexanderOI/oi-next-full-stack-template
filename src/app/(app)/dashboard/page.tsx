@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 
 export default function BackupsPage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="space-y-8">
       <PageHeader title="Dashboard" breadcrumbLabel="Dashboard" />
 
       <Card>

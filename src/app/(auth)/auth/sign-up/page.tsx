@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn, signUp } from "@/lib/auth-client";
+import { signUp } from "@/lib/auth-client";
 import { registerSchema, type RegisterInput } from "@/schemas/auth.schema";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,15 +16,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Form, FormField } from "@/components/form";
-import { GoogleIcon } from "@/components/icons/Google";
+import { Form, FormField } from "@/components/ui/form";
 
 export default function SignUpPage() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -40,6 +36,7 @@ export default function SignUpPage() {
   async function onSubmit(data: RegisterInput) {
     setIsLoading(true);
     setError(null);
+    setVerificationSent(false);
 
     const response = await signUp.email({
       name: data.name,
@@ -54,22 +51,9 @@ export default function SignUpPage() {
       return;
     }
 
-    router.push("/dashboard");
-  }
-
-  async function handleGoogleSignUp() {
-    setIsGoogleLoading(true);
-    setError(null);
-
-    try {
-      await signIn.social({
-        provider: "google",
-        callbackURL: "/dashboard",
-      });
-    } catch {
-      setError("Failed to sign up with Google. Please try again.");
-      setIsGoogleLoading(false);
-    }
+    form.reset();
+    setVerificationSent(true);
+    setIsLoading(false);
   }
 
   return (
@@ -86,17 +70,18 @@ export default function SignUpPage() {
                 {error}
               </div>
             )}
+            {verificationSent && (
+              <div className="rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400">
+                Account created. Check your email to verify your account before signing in.
+              </div>
+            )}
 
             <FormField name="name" label="Name" required>
               <Input type="text" placeholder="John Doe" autoComplete="name" />
             </FormField>
 
             <FormField name="username" label="Username" required>
-              <Input
-                type="text"
-                placeholder="john.doe"
-                autoComplete="username"
-              />
+              <Input type="text" placeholder="john.doe" autoComplete="username" />
             </FormField>
 
             <FormField name="email" label="Email" required>
@@ -121,23 +106,6 @@ export default function SignUpPage() {
             </Button>
           </form>
         </Form>
-
-        {/* <div className="relative my-6">
-          <Separator />
-          <span className="bg-card text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs">
-            or continue with
-          </span>
-        </div> */}
-
-        {/* <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleGoogleSignUp}
-          disabled={isGoogleLoading}
-        >
-          <GoogleIcon />
-          {isGoogleLoading ? "Connecting..." : "Sign up with Google"}
-        </Button> */}
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-muted-foreground text-sm">

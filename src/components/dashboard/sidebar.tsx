@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import {
-  Plug,
   LayoutDashboard,
   Settings,
   Activity,
@@ -16,8 +15,8 @@ import {
   Lock,
   PanelLeftClose,
   PanelLeft,
+  User,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { setSidebarCollapsed } from "@/actions/sidebar";
@@ -32,6 +31,7 @@ interface NavItem {
 
 const generalNav: NavItem[] = [
   { label: "Panel", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Profile", href: "/profile", icon: User },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -56,7 +56,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ initialCollapsed }: DashboardSidebarProps) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const handleToggle = () => {
     const newValue = !collapsed;

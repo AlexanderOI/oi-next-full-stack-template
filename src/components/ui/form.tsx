@@ -3,6 +3,8 @@
 import React from "react";
 import {
   Controller,
+  type ControllerFieldState,
+  type ControllerRenderProps,
   type FieldPath,
   type FieldValues,
   FormProvider,
@@ -28,7 +30,7 @@ type FormFieldProps<TFieldValues extends FieldValues, TName extends FieldPath<TF
   label?: string;
   description?: string;
   required?: boolean;
-  children: React.ReactElement<Record<string, any>>;
+  children: React.ReactElement<Record<string, unknown>>;
 };
 
 /**
@@ -85,13 +87,8 @@ type FormFieldRenderProps<
   description?: string;
   required?: boolean;
   render: (props: {
-    field: any;
-    fieldState: {
-      error: { message?: string } | undefined;
-      invalid: boolean;
-      isDirty: boolean;
-      isTouched: boolean;
-    };
+    field: ControllerRenderProps<TFieldValues, TName>;
+    fieldState: ControllerFieldState;
   }) => React.ReactNode;
 };
 
@@ -118,12 +115,7 @@ export function FormFieldRender<
 
           {render({
             field,
-            fieldState: {
-              error: fieldState.error,
-              invalid: fieldState.invalid,
-              isDirty: fieldState.isDirty,
-              isTouched: fieldState.isTouched,
-            },
+            fieldState,
           })}
 
           <FieldError errors={[fieldState.error]} />

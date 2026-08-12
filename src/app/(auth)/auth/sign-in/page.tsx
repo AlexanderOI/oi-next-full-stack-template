@@ -17,13 +17,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Form, FormField } from "@/components/form";
+import { Form, FormField } from "@/components/ui/form";
 
 export default function SignInPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -58,21 +57,6 @@ export default function SignInPage() {
     setIsLoading(false);
   }
 
-  async function handleGoogleSignIn() {
-    setIsGoogleLoading(true);
-    setError(null);
-
-    try {
-      await signIn.social({
-        provider: "google",
-        callbackURL: "/dashboard",
-      });
-    } catch {
-      setError("Failed to sign in with Google. Please try again.");
-      setIsGoogleLoading(false);
-    }
-  }
-
   return (
     <Card>
       <CardHeader className="text-center">
@@ -89,7 +73,11 @@ export default function SignInPage() {
             )}
 
             <FormField name="identifier" label="Email or Username" required>
-              <Input type="text" placeholder="you@example.com or username" autoComplete="username" />
+              <Input
+                type="text"
+                placeholder="you@example.com or username"
+                autoComplete="username"
+              />
             </FormField>
 
             <FormField name="password" label="Password" required>
@@ -112,23 +100,6 @@ export default function SignInPage() {
         </Form>
 
         <span className="text-sm text-red-500">{form.formState.errors.root?.message}</span>
-
-        {/* <div className="relative my-6">
-            <Separator />
-            <span className="bg-card text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs">
-              or continue with
-            </span>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleSignIn}
-            disabled={isGoogleLoading}
-          >
-            <GoogleIcon />
-            {isGoogleLoading ? "Connecting..." : "Sign in with Google"}
-          </Button> */}
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-muted-foreground text-sm">

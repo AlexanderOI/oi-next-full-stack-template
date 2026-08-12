@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { MessageSquare, HelpCircle, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Zap } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { signOut } from "@/lib/auth-client";
 import {
