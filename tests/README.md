@@ -25,15 +25,15 @@ CI should run `bun run test:run`, `bun run type-check`, and `bun run lint`. Ther
 
 Create a directory only when its first test is added.
 
-| Location | Purpose |
-| --- | --- |
-| `tests/unit/` | Pure logic, schemas, formatters, templates, and isolated service behavior |
-| `tests/components/` | Client Component behavior and accessibility with Testing Library and `user-event` |
-| `tests/server/` | Server Component, Server Action, and route-handler orchestration |
-| `tests/integration/` | Real data-access constraints and adapter contracts against controlled infrastructure |
-| `tests/e2e/` | Critical browser-visible business flows; add with Playwright only when the first executable flow is implemented |
-| `tests/fixtures/` | Shared factories and deterministic fixture builders |
-| `tests/setup.ts` | Global matcher and environment setup; no business mocks |
+| Location             | Purpose                                                                                                         |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `tests/unit/`        | Pure logic, schemas, formatters, templates, and isolated service behavior                                       |
+| `tests/components/`  | Client Component behavior and accessibility with Testing Library and `user-event`                               |
+| `tests/server/`      | Server Component, Server Action, and route-handler orchestration                                                |
+| `tests/integration/` | Real data-access constraints and adapter contracts against controlled infrastructure                            |
+| `tests/e2e/`         | Critical browser-visible business flows; add with Playwright only when the first executable flow is implemented |
+| `tests/fixtures/`    | Shared factories and deterministic fixture builders                                                             |
+| `tests/setup.ts`     | Global matcher and environment setup; no business mocks                                                         |
 
 Use `<subject>.test.ts` or `<subject>.test.tsx`. Mirror the source domain after the taxonomy, such as `tests/server/profile/update-profile.test.ts`. Tests must import production modules through `@/`; never reach into private implementation files solely to make testing easier.
 
@@ -66,17 +66,17 @@ Use `<subject>.test.ts` or `<subject>.test.tsx`. Mirror the source domain after 
 
 ## Decision Matrix
 
-| Unit | Preferred test | What to prove | Boundary treatment |
-| --- | --- | --- | --- |
-| Pure logic and schemas | Unit | Valid partitions, normalization, exact field errors, boundaries | No mocks |
-| Client Components | Component | User-visible state, interactions, submission, accessibility | Mock Server Actions and browser-only adapters, not child internals |
-| Server Components | Server integration | Authenticated content, redirects, server-fetched data states | Stub auth/data boundaries; use E2E when Next.js runtime behavior is the subject |
-| Server Actions | Server unit/integration | Auth first, validation, mutation, revalidation, safe errors | Mock `headers`/`revalidatePath` and external adapters for branching; use real test DB for query semantics |
-| Data access/repositories | Integration | Queries, constraints, transactions, and mappings | Use an isolated database; do not mock Drizzle when SQL behavior matters |
-| External services | Contract/unit | Request mapping, validation, success mapping, provider failures | Fake only the provider SDK/network boundary |
-| Auth/security | Server integration/E2E | Protected access, verification, redirects, session policy | Prefer Better Auth test configuration or public API; never assert its internals |
-| Route handlers | Contract | Status, headers, body, authentication, malformed input | Test only project-owned behavior; Better Auth's generated handler needs a smoke test, not duplicated library tests |
-| Workflows | E2E | User goal and persisted result across boundaries | Real app and isolated backing services; mock only uncontrollable third parties |
+| Unit                     | Preferred test          | What to prove                                                   | Boundary treatment                                                                                                 |
+| ------------------------ | ----------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Pure logic and schemas   | Unit                    | Valid partitions, normalization, exact field errors, boundaries | No mocks                                                                                                           |
+| Client Components        | Component               | User-visible state, interactions, submission, accessibility     | Mock Server Actions and browser-only adapters, not child internals                                                 |
+| Server Components        | Server integration      | Authenticated content, redirects, server-fetched data states    | Stub auth/data boundaries; use E2E when Next.js runtime behavior is the subject                                    |
+| Server Actions           | Server unit/integration | Auth first, validation, mutation, revalidation, safe errors     | Mock `headers`/`revalidatePath` and external adapters for branching; use real test DB for query semantics          |
+| Data access/repositories | Integration             | Queries, constraints, transactions, and mappings                | Use an isolated database; do not mock Drizzle when SQL behavior matters                                            |
+| External services        | Contract/unit           | Request mapping, validation, success mapping, provider failures | Fake only the provider SDK/network boundary                                                                        |
+| Auth/security            | Server integration/E2E  | Protected access, verification, redirects, session policy       | Prefer Better Auth test configuration or public API; never assert its internals                                    |
+| Route handlers           | Contract                | Status, headers, body, authentication, malformed input          | Test only project-owned behavior; Better Auth's generated handler needs a smoke test, not duplicated library tests |
+| Workflows                | E2E                     | User goal and persisted result across boundaries                | Real app and isolated backing services; mock only uncontrollable third parties                                     |
 
 Server Components are not Client Components. Do not force framework-heavy async rendering through jsdom merely to claim unit coverage. Test project-owned decisions at their extracted boundaries, then cover routing, redirects, streaming, and hydration in an executable browser flow.
 
