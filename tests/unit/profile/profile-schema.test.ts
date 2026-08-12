@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { profileSchema } from "@/features/profile/schemas/profile";
+import { profileSchema } from "@/features/profile/contracts";
 
 describe("profileSchema", () => {
   it("normalizes whitespace and email casing", () => {

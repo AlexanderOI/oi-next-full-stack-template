@@ -4,13 +4,20 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/features/auth/server";
+import { uploadImage } from "@/services/storage/cloudinary/upload-image";
 
-const avatarSchema = z.url("Invalid image URL");
+const avatarSchema = z
+  .file()
+  .max(5 * 1024 * 1024, "Image must be smaller than 5MB")
+  .mime(
+    ["image/jpeg", "image/png", "image/webp", "image/avif"],
+    "Please select a supported image file"
+  );
 
-export async function updateAvatar(image: string) {
+export async function updateAvatar(file: File) {
   try {
-    const parsed = avatarSchema.safeParse(image);
+    const parsed = avatarSchema.safeParse(file);
 
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid image URL" };
@@ -23,9 +30,19 @@ export async function updateAvatar(image: string) {
       return { success: false, error: "Unauthorized" };
     }
 
+    const { secureUrl } = await uploadImage(parsed.data, {
+      folder: "my-app/avatars",
+      width: 256,
+      height: 256,
+      fit: "cover",
+      format: "auto",
+      quality: "auto",
+      maxFileSize: 5 * 1024 * 1024,
+    });
+
     await auth.api.updateUser({
       headers: requestHeaders,
-      body: { image: parsed.data },
+      body: { image: secureUrl },
     });
     revalidatePath("/profile");
 

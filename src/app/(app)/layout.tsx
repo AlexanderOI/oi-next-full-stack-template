@@ -1,9 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { getSidebarCollapsed } from "@/actions/sidebar";
-import { DashboardHeader } from "@/features/dashboard/components/header";
-import { DashboardSidebar } from "@/features/dashboard/components/sidebar";
+import { AppHeader, AppSidebar } from "@/features/app-shell/client";
+import { getSidebarCollapsed } from "@/features/app-shell/server";
+import { auth } from "@/features/auth/server";
 import type { ReactNode } from "react";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -19,9 +18,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="dark flex h-screen flex-col">
-      <DashboardHeader />
+      <AppHeader />
       <div className="flex flex-1 overflow-hidden">
-        <DashboardSidebar initialCollapsed={sidebarCollapsed} />
+        <AppSidebar initialCollapsed={sidebarCollapsed} />
         <main className="bg-background flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-6xl">{children}</div>
         </main>

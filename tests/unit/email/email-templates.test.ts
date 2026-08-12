@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { accountVerificationEmail, emailChangeVerificationEmail } from "@/lib/email-templates";
+import { accountVerificationEmail, emailChangeVerificationEmail } from "@/features/auth/contracts";
 
 describe("email templates", () => {
   it("renders an account verification link and escapes user-controlled values", () => {

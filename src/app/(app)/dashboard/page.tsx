@@ -1,13 +1,11 @@
-"use client";
-
 import { Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageHeader } from "@/features/dashboard/components/page-header";
+import { DashboardHeader } from "@/features/dashboard/server";
 
-export default function BackupsPage() {
+export default function DashboardPage() {
   return (
     <div className="space-y-8">
-      <PageHeader title="Dashboard" breadcrumbLabel="Dashboard" />
+      <DashboardHeader title="Dashboard" breadcrumbLabel="Dashboard" />
 
       <Card>
         <CardHeader>

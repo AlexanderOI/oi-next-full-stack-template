@@ -2,15 +2,12 @@
 
 import { headers } from "next/headers";
 
-import { auth } from "@/lib/auth";
-import {
-  passwordFormSchema,
-  type PasswordFormType,
-} from "@/features/profile/schemas/password-form";
+import { auth } from "@/features/auth/server";
+import { passwordChangeSchema, type PasswordChangeInput } from "../contracts";
 
-export async function changePassword(data: PasswordFormType) {
+export async function changePassword(data: PasswordChangeInput) {
   try {
-    const parsed = passwordFormSchema.safeParse(data);
+    const parsed = passwordChangeSchema.safeParse(data);
 
     if (!parsed.success) {
       return { success: false, error: "Validation failed" };

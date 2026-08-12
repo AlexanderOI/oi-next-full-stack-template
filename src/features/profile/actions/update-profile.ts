@@ -6,11 +6,11 @@ import { and, eq, ne } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { user } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { auth } from "@/features/auth/server";
 import { getFieldErrors } from "@/lib/utils";
-import { type ProfileSchemaType, profileSchema } from "@/features/profile/schemas/profile";
+import { type ProfileInput, profileSchema } from "../contracts";
 
-export async function updateProfile(data: ProfileSchemaType) {
+export async function updateProfile(data: ProfileInput) {
   let profileUpdated = false;
 
   try {
