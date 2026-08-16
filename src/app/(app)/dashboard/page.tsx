@@ -1,11 +1,11 @@
 import { Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DashboardHeader } from "@/features/dashboard/server";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function DashboardPage() {
   return (
     <div className="space-y-8">
-      <DashboardHeader title="Dashboard" breadcrumbLabel="Dashboard" />
+      <PageHeader title="Dashboard" description="Dashboard" />
 
       <Card>
         <CardHeader>

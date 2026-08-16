@@ -7,7 +7,14 @@ import { db } from "@/db/drizzle";
 import { authorizationAudit, role, rolePermission, userRole } from "@/db/schema";
 import { getFieldErrors } from "@/lib/utils";
 import { type ActionResult, PERMISSIONS, type RoleInput, roleInputSchema } from "../contracts";
+import { deriveRoleKey, ROLE_KEY_CONFLICT_ERROR, ROLE_KEY_EMPTY_ERROR } from "../role-key";
 import { requireAuthorizedSession } from "../server";
+
+function isUniqueConstraintError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  if ("code" in error && error.code === "23505") return true;
+  return "cause" in error && isUniqueConstraintError(error.cause);
+}
 
 export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: string }>> {
   try {
@@ -19,6 +26,7 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
       return { success: false, error: "Validation failed", details: getFieldErrors(parsed.error) };
     }
 
+    const key = deriveRoleKey(parsed.data.name);
     const id = parsed.data.id ?? crypto.randomUUID();
     await db.transaction(async (tx) => {
       if (parsed.data.id) {
@@ -52,10 +60,16 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
             throw new Error("This change would remove your role management access");
           }
         }
+        const [keyConflict] = await tx
+          .select({ id: role.id })
+          .from(role)
+          .where(and(eq(role.key, key), ne(role.id, id)))
+          .limit(1);
+        if (keyConflict) throw new Error(ROLE_KEY_CONFLICT_ERROR);
         await tx
           .update(role)
           .set({
-            key: parsed.data.key,
+            key,
             name: parsed.data.name,
             description: parsed.data.description,
             updatedAt: new Date(),
@@ -63,9 +77,15 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
           .where(eq(role.id, id));
         await tx.delete(rolePermission).where(eq(rolePermission.roleId, id));
       } else {
+        const [keyConflict] = await tx
+          .select({ id: role.id })
+          .from(role)
+          .where(eq(role.key, key))
+          .limit(1);
+        if (keyConflict) throw new Error(ROLE_KEY_CONFLICT_ERROR);
         await tx.insert(role).values({
           id,
-          key: parsed.data.key,
+          key,
           name: parsed.data.name,
           description: parsed.data.description,
         });
@@ -80,7 +100,7 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
         action: parsed.data.id ? "role.updated" : "role.created",
         targetType: "role",
         targetId: id,
-        metadata: { key: parsed.data.key, permissions: parsed.data.permissions },
+        metadata: { key, permissions: parsed.data.permissions },
       });
     });
 
@@ -92,9 +112,18 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
       "Role not found",
       "System roles cannot be modified",
       "This change would remove your role management access",
+      ROLE_KEY_CONFLICT_ERROR,
+      ROLE_KEY_EMPTY_ERROR,
     ]);
     const message = error instanceof Error ? error.message : "";
-    return { success: false, error: safeMessages.has(message) ? message : "Unable to save role" };
+    return {
+      success: false,
+      error: isUniqueConstraintError(error)
+        ? ROLE_KEY_CONFLICT_ERROR
+        : safeMessages.has(message)
+          ? message
+          : "Unable to save role",
+    };
   }
 }
 

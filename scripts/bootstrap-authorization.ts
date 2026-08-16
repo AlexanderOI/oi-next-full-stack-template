@@ -34,14 +34,24 @@ const systemRoles: readonly {
 
 async function bootstrap() {
   await db.transaction(async (tx) => {
-    for (const key of permissionKeys) {
-      await tx
-        .insert(permission)
-        .values({ key, description: permissionCatalog[key] })
-        .onConflictDoUpdate({
-          target: permission.key,
-          set: { description: permissionCatalog[key], updatedAt: new Date() },
-        });
+    for (const section of permissionCatalog) {
+      for (const definition of section.permissions) {
+        await tx
+          .insert(permission)
+          .values({
+            key: definition.key,
+            name: definition.name,
+            description: definition.description,
+          })
+          .onConflictDoUpdate({
+            target: permission.key,
+            set: {
+              name: definition.name,
+              description: definition.description,
+              updatedAt: new Date(),
+            },
+          });
+      }
     }
 
     for (const systemRole of systemRoles) {

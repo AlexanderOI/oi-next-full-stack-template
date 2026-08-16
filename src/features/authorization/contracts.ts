@@ -15,20 +15,79 @@ export const PERMISSIONS = {
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 export type PermissionMatch = "all" | "any";
 
-export const permissionKeys = Object.values(PERMISSIONS) as readonly PermissionKey[];
-export const permissionKeySchema = z.enum(permissionKeys as [PermissionKey, ...PermissionKey[]]);
+export interface PermissionDefinition {
+  key: PermissionKey;
+  name: string;
+  description: string;
+}
 
-export const permissionCatalog: Readonly<Record<PermissionKey, string>> = {
-  [PERMISSIONS.PROFILE_READ_OWN]: "View own profile",
-  [PERMISSIONS.PROFILE_UPDATE_OWN]: "Update own profile, avatar, and password",
-  [PERMISSIONS.ROLES_READ]: "View roles and their permissions",
-  [PERMISSIONS.ROLES_CREATE]: "Create configurable roles",
-  [PERMISSIONS.ROLES_UPDATE]: "Update configurable roles",
-  [PERMISSIONS.ROLES_DELETE]: "Delete configurable roles",
-  [PERMISSIONS.USERS_READ]: "View users and their role assignments",
-  [PERMISSIONS.USER_ROLES_UPDATE]: "Assign and revoke user roles",
-  [PERMISSIONS.AUDIT_READ]: "View authorization audit events",
-};
+export interface PermissionSection {
+  name: string;
+  permissions: readonly PermissionDefinition[];
+}
+
+export const permissionCatalog: readonly PermissionSection[] = [
+  {
+    name: "Profile",
+    permissions: [
+      {
+        key: PERMISSIONS.PROFILE_READ_OWN,
+        name: "View own profile",
+        description: "View personal profile details",
+      },
+      {
+        key: PERMISSIONS.PROFILE_UPDATE_OWN,
+        name: "Update own profile",
+        description: "Update personal profile details, avatar, and password",
+      },
+    ],
+  },
+  {
+    name: "Authorization",
+    permissions: [
+      {
+        key: PERMISSIONS.ROLES_READ,
+        name: "View roles",
+        description: "View roles and their permissions",
+      },
+      {
+        key: PERMISSIONS.ROLES_CREATE,
+        name: "Create roles",
+        description: "Create configurable roles",
+      },
+      {
+        key: PERMISSIONS.ROLES_UPDATE,
+        name: "Update roles",
+        description: "Update configurable roles",
+      },
+      {
+        key: PERMISSIONS.ROLES_DELETE,
+        name: "Delete roles",
+        description: "Delete configurable roles",
+      },
+      {
+        key: PERMISSIONS.USERS_READ,
+        name: "View users",
+        description: "View users and their role assignments",
+      },
+      {
+        key: PERMISSIONS.USER_ROLES_UPDATE,
+        name: "Manage user roles",
+        description: "Assign and revoke user roles",
+      },
+      {
+        key: PERMISSIONS.AUDIT_READ,
+        name: "View authorization audit",
+        description: "View authorization audit events",
+      },
+    ],
+  },
+] as const;
+
+export const permissionKeys = permissionCatalog.flatMap(({ permissions }) =>
+  permissions.map(({ key }) => key)
+) as readonly PermissionKey[];
+export const permissionKeySchema = z.enum(permissionKeys as [PermissionKey, ...PermissionKey[]]);
 
 export interface AuthorizationSnapshot {
   userId: string;
@@ -59,12 +118,6 @@ export type ActionResult<T = undefined> =
 
 export const roleInputSchema = z.object({
   id: z.string().min(1).optional(),
-  key: z
-    .string()
-    .trim()
-    .min(2)
-    .max(50)
-    .regex(/^[a-z][a-z0-9-]*$/, "Use lowercase letters, numbers, and hyphens"),
   name: z.string().trim().min(2).max(80),
   description: z.string().trim().max(240),
   permissions: z.array(permissionKeySchema).min(1, "Select at least one permission"),
