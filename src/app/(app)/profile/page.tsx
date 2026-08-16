@@ -1,14 +1,19 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/features/auth/server";
+import { requireSession } from "@/features/auth/server";
+import { assertPermission, PERMISSIONS } from "@/features/authorization/server";
 import { AvatarUploader, PasswordChangeForm, ProfileDetailsForm } from "@/features/profile/client";
 import type { ProfileUser } from "@/features/profile/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function ProfilePage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  let session;
+  try {
+    session = await requireSession();
+    await assertPermission(PERMISSIONS.PROFILE_READ_OWN);
+  } catch {
+    if (!session) redirect("/auth/sign-in");
+    redirect("/forbidden");
+  }
 
   if (!session) {
     redirect("/auth/sign-in");

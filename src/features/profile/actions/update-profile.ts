@@ -7,6 +7,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db/drizzle";
 import { user } from "@/db/schema";
 import { auth } from "@/features/auth/server";
+import { requireAuthorizedSession, PERMISSIONS } from "@/features/authorization/server";
 import { getFieldErrors } from "@/lib/utils";
 import { type ProfileInput, profileSchema } from "../contracts";
 
@@ -15,13 +16,7 @@ export async function updateProfile(data: ProfileInput) {
 
   try {
     const requestHeaders = await headers();
-    const session = await auth.api.getSession({
-      headers: requestHeaders,
-    });
-
-    if (!session) {
-      return { success: false, error: "Unauthorized" };
-    }
+    const session = await requireAuthorizedSession(PERMISSIONS.PROFILE_UPDATE_OWN);
 
     const parsed = profileSchema.safeParse(data);
 

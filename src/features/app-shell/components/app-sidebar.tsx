@@ -16,10 +16,12 @@ import {
   ShieldCheck,
   Table2,
   User,
+  Users,
 } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Permission, PERMISSIONS } from "@/features/authorization/client";
 import { setSidebarCollapsed } from "../actions/sidebar-preference";
 import {
   SidebarNavigationItem,
@@ -72,6 +74,14 @@ export function AppSidebar({ initialCollapsed }: { initialCollapsed: boolean }) 
           {generalNav.map((item) => (
             <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
           ))}
+          <Permission permissions={[PERMISSIONS.ROLES_READ, PERMISSIONS.USERS_READ]} match="any">
+            <SidebarNavigationItem
+              label="Administration"
+              href="/admin"
+              icon={Users}
+              collapsed={collapsed}
+            />
+          </Permission>
           <SidebarSeparator />
           <SidebarSectionTitle title="Environment" collapsed={collapsed} />
           {environmentNav.map((item) => (

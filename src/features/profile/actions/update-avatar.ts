@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 
 import { auth } from "@/features/auth/server";
+import { requireAuthorizedSession, PERMISSIONS } from "@/features/authorization/server";
 import { uploadImage } from "@/services/storage/cloudinary/upload-image";
 
 const avatarSchema = z
@@ -24,11 +25,7 @@ export async function updateAvatar(file: File) {
     }
 
     const requestHeaders = await headers();
-    const session = await auth.api.getSession({ headers: requestHeaders });
-
-    if (!session) {
-      return { success: false, error: "Unauthorized" };
-    }
+    await requireAuthorizedSession(PERMISSIONS.PROFILE_UPDATE_OWN);
 
     const { secureUrl } = await uploadImage(parsed.data, {
       folder: "my-app/avatars",

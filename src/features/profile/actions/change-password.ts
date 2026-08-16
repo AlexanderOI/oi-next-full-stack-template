@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 
 import { auth } from "@/features/auth/server";
+import { requireAuthorizedSession, PERMISSIONS } from "@/features/authorization/server";
 import { passwordChangeSchema, type PasswordChangeInput } from "../contracts";
 
 export async function changePassword(data: PasswordChangeInput) {
@@ -14,11 +15,7 @@ export async function changePassword(data: PasswordChangeInput) {
     }
 
     const requestHeaders = await headers();
-    const session = await auth.api.getSession({ headers: requestHeaders });
-
-    if (!session) {
-      return { success: false, error: "Unauthorized" };
-    }
+    await requireAuthorizedSession(PERMISSIONS.PROFILE_UPDATE_OWN);
 
     await auth.api.changePassword({
       headers: requestHeaders,

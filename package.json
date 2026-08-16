@@ -12,7 +12,11 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:bootstrap": "bun scripts/bootstrap-authorization.ts",
+    "auth:grant-admin": "bun scripts/grant-admin.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
