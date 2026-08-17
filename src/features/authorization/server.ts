@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { asc, eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/db/drizzle";
 import { permission, role, rolePermission, user, userRole } from "@/db/schema";
@@ -12,12 +13,13 @@ import type {
   RoleSummary,
   UserRoleSummary,
 } from "./contracts";
+import { localizeSystemRoles, permissionCatalog } from "./contracts";
 import { evaluatePermissions } from "./policy";
 import { buildAuthorizationSnapshot } from "./resolution";
 
 export class AuthorizationError extends Error {
   constructor() {
-    super("Forbidden");
+    super("FORBIDDEN");
     this.name = "AuthorizationError";
   }
 }
@@ -97,6 +99,24 @@ export async function listRoles(): Promise<RoleSummary[]> {
     roles.set(row.id, current);
   }
   return [...roles.values()];
+}
+
+export async function listLocalizedRoles(): Promise<RoleSummary[]> {
+  const [roles, t] = await Promise.all([listRoles(), getTranslations("authorization.systemRoles")]);
+  return localizeSystemRoles(roles, t);
+}
+
+export async function getLocalizedPermissionCatalog() {
+  const t = await getTranslations("authorization");
+  return permissionCatalog.map((section) => ({
+    ...section,
+    name: t(`sections.${section.key}`),
+    permissions: section.permissions.map((definition) => ({
+      ...definition,
+      name: t(`permissions.${definition.key}.name`),
+      description: t(`permissions.${definition.key}.description`),
+    })),
+  }));
 }
 
 export async function listUsersWithRoles(): Promise<UserRoleSummary[]> {

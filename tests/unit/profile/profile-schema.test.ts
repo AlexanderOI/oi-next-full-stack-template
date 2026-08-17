@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { createTranslator } from "next-intl";
 
-import { profileSchema } from "@/features/profile/contracts";
+import { createProfileSchema } from "@/features/profile/contracts";
+import es from "../../../messages/es.json";
+
+const profileSchema = createProfileSchema((key) => key);
 
 describe("profileSchema", () => {
   it("normalizes whitespace and email casing", () => {
@@ -25,5 +29,22 @@ describe("profileSchema", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("returns localized user-facing validation messages", () => {
+    const t = createTranslator({ locale: "es", messages: es, namespace: "profile.validation" });
+    const result = createProfileSchema(t).safeParse({
+      name: "A",
+      username: "INVALID_NAME",
+      email: "invalid",
+    });
+
+    expect(result.error?.issues.map(({ message }) => message)).toEqual(
+      expect.arrayContaining([
+        "El nombre debe tener al menos 2 caracteres",
+        "El nombre de usuario solo puede contener letras minúsculas, números y puntos",
+        "La dirección de correo electrónico no es válida",
+      ])
+    );
   });
 });

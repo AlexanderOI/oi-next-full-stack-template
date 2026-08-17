@@ -18,7 +18,7 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
   try {
     const session = await requireAuthorizedSession(PERMISSIONS.USER_ROLES_UPDATE);
     const parsed = userRolesInputSchema.safeParse(input);
-    if (!parsed.success) return { success: false, error: "Invalid role assignment" };
+    if (!parsed.success) return { success: false, code: "INVALID_ASSIGNMENT" };
 
     await db.transaction(
       async (tx) => {
@@ -27,14 +27,14 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
           .from(user)
           .where(eq(user.id, parsed.data.userId))
           .limit(1);
-        if (!target) throw new Error("User not found");
+        if (!target) throw new Error("USER_NOT_FOUND");
 
         const selectedRoles = await tx
           .select({ id: role.id, key: role.key })
           .from(role)
           .where(inArray(role.id, parsed.data.roleIds));
         if (selectedRoles.length !== new Set(parsed.data.roleIds).size) {
-          throw new Error("One or more roles are invalid");
+          throw new Error("INVALID_ROLES");
         }
 
         const [adminRole] = await tx
@@ -42,7 +42,7 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
           .from(role)
           .where(eq(role.key, "admin"))
           .limit(1);
-        if (!adminRole) throw new Error("The admin role has not been bootstrapped");
+        if (!adminRole) throw new Error("ADMIN_MISSING");
 
         const [targetAdmin] = await tx
           .select({ userId: userRole.userId })
@@ -75,7 +75,7 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
             adminCount: Number(adminCount),
           })
         ) {
-          throw new Error("This assignment would remove required administrative access");
+          throw new Error("ADMINISTRATIVE_ACCESS");
         }
 
         await tx.delete(userRole).where(eq(userRole.userId, target.id));
@@ -97,17 +97,23 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    const safeMessages = new Set([
-      "Forbidden",
-      "User not found",
-      "One or more roles are invalid",
-      "The admin role has not been bootstrapped",
-      "This assignment would remove required administrative access",
+    const safeCodes = new Set([
+      "FORBIDDEN",
+      "USER_NOT_FOUND",
+      "INVALID_ROLES",
+      "ADMIN_MISSING",
+      "ADMINISTRATIVE_ACCESS",
     ]);
     const message = error instanceof Error ? error.message : "";
     return {
       success: false,
-      error: safeMessages.has(message) ? message : "Unable to update roles",
+      code: (safeCodes.has(message) ? message : "UPDATE_FAILED") as
+        | "FORBIDDEN"
+        | "USER_NOT_FOUND"
+        | "INVALID_ROLES"
+        | "ADMIN_MISSING"
+        | "ADMINISTRATIVE_ACCESS"
+        | "UPDATE_FAILED",
     };
   }
 }

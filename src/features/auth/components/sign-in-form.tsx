@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,14 +19,17 @@ import {
 import { Form, FormField } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { signIn } from "../auth-client";
-import { loginSchema, type LoginInput } from "../contracts";
+import { createLoginSchema, type LoginInput } from "../contracts";
 
 export function SignInForm() {
   const router = useRouter();
+  const t = useTranslations("auth.signIn");
+  const common = useTranslations("common");
+  const validation = useTranslations("auth.validation");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(createLoginSchema(validation)),
     defaultValues: { identifier: "", password: "" },
   });
 
@@ -37,7 +41,7 @@ export function SignInForm() {
       ? await signIn.email({ email: data.identifier, password: data.password })
       : await signIn.username({ username: data.identifier, password: data.password });
 
-    if (response.error) setError(response.error.message ?? "An unknown error occurred");
+    if (response.error) setError(t("unknownError"));
     else router.push("/dashboard");
     setIsLoading(false);
   }
@@ -45,8 +49,8 @@ export function SignInForm() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your account to continue</CardDescription>
+        <CardTitle className="text-2xl">{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -56,14 +60,10 @@ export function SignInForm() {
                 {error}
               </div>
             )}
-            <FormField name="identifier" label="Email or Username" required>
-              <Input
-                type="text"
-                placeholder="you@example.com or username"
-                autoComplete="username"
-              />
+            <FormField name="identifier" label={t("identifier")} required>
+              <Input type="text" placeholder={t("identifierPlaceholder")} autoComplete="username" />
             </FormField>
-            <FormField name="password" label="Password" required>
+            <FormField name="password" label={common("password")} required>
               <Input type="password" placeholder="••••••••" autoComplete="current-password" />
             </FormField>
             <div className="flex justify-end">
@@ -71,11 +71,11 @@ export function SignInForm() {
                 href="/auth/forgot-password"
                 className="text-muted-foreground hover:text-primary text-sm"
               >
-                Forgot password?
+                {t("forgotPassword")}
               </Link>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? t("pending") : t("submit")}
             </Button>
           </form>
         </Form>
@@ -83,9 +83,9 @@ export function SignInForm() {
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-muted-foreground text-sm">
-          Don&apos;t have an account?{" "}
+          {t("noAccount")}{" "}
           <Link href="/auth/sign-up" className="text-primary font-medium hover:underline">
-            Sign up
+            {t("signUp")}
           </Link>
         </p>
       </CardFooter>

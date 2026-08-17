@@ -1,0 +1,269 @@
+{
+  "common": {
+    "appName": "oi-nextjs",
+    "name": "Name",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "description": "Description",
+    "permissions": "Permissions",
+    "saving": "Saving...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "metadata": {
+    "title": "oi-nextjs",
+    "description": "Next.js template with authentication, theming, and AI-agentic friendly architecture"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Welcome back",
+      "description": "Sign in to your account to continue",
+      "identifier": "Email or username",
+      "identifierPlaceholder": "you@example.com or username",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "pending": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "unknownError": "An unknown error occurred"
+    },
+    "signUp": {
+      "title": "Create an account",
+      "description": "Get started with your free account",
+      "namePlaceholder": "John Doe",
+      "usernamePlaceholder": "john.doe",
+      "emailPlaceholder": "you@example.com",
+      "passwordHint": "Must be at least 8 characters",
+      "confirmPassword": "Confirm password",
+      "submit": "Create account",
+      "pending": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "verificationSent": "Account created. Check your email to verify your account before signing in.",
+      "failed": "Failed to create account. Please try again."
+    },
+    "validation": {
+      "identifierRequired": "Email or username is required",
+      "passwordMin": "Password must be at least 8 characters",
+      "nameMin": "Name must be at least 2 characters",
+      "emailInvalid": "Invalid email address",
+      "usernameMin": "Username must be at least 3 characters",
+      "usernameMax": "Username must be at most 30 characters",
+      "usernameFormat": "Username can only contain lowercase letters, numbers, and dots",
+      "passwordsMismatch": "Passwords do not match"
+    }
+  },
+  "shell": {
+    "general": "General",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "administration": "Administration",
+    "environment": "Environment",
+    "overview": "Overview",
+    "monitoring": "Monitoring",
+    "editor": "Editor",
+    "tables": "Tables",
+    "backups": "Backups",
+    "dataMasking": "Data masking",
+    "backend": "Backend",
+    "dataApi": "Data API",
+    "authentication": "Authentication",
+    "permissions": "Permissions",
+    "collapseMenu": "Collapse menu",
+    "expandMenu": "Expand menu",
+    "signOut": "Sign out"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Dashboard",
+    "empty": "No content yet."
+  },
+  "profile": {
+    "title": "Profile",
+    "manageAccount": "Manage your account",
+    "emailChangeHint": "Changing your email requires verification at the new address.",
+    "saveChanges": "Save changes",
+    "updated": "Profile updated",
+    "updatedEmailPending": "Profile updated. Check your new email to confirm the address change.",
+    "uploadAvatar": "Click to upload avatar",
+    "uploadAvatarLabel": "Upload profile image",
+    "avatarUpdated": "Avatar updated",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "changingPassword": "Changing...",
+    "passwordChanged": "Password changed successfully",
+    "language": {
+      "title": "Language",
+      "description": "Choose the language used for your account.",
+      "label": "Application language",
+      "en": "English",
+      "es": "Spanish",
+      "saving": "Changing language...",
+      "saved": "Language updated"
+    },
+    "validation": {
+      "nameMin": "Name must be at least 2 characters",
+      "usernameMin": "Username must be at least 3 characters",
+      "usernameMax": "Username must be at most 30 characters",
+      "usernameFormat": "Username can only contain lowercase letters, numbers, and dots",
+      "emailInvalid": "Invalid email address",
+      "currentPasswordRequired": "Current password is required",
+      "passwordMin": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordsMismatch": "Passwords do not match",
+      "imageType": "Please select a supported image file",
+      "imageSize": "Image must be smaller than 5MB"
+    },
+    "errors": {
+      "validation": "Please correct the highlighted fields.",
+      "usernameTaken": "Username is already taken",
+      "updateFailed": "Unable to update profile",
+      "partialEmailFailure": "Profile details were updated, but the email verification could not be sent.",
+      "passwordFailed": "Unable to change password",
+      "avatarFailed": "Unable to update avatar",
+      "unauthorized": "You must be signed in.",
+      "invalidLocale": "The selected language is not supported."
+    }
+  },
+  "authorization": {
+    "admin": {
+      "title": "Administration",
+      "description": "Manage access without granting permissions directly to users.",
+      "rolesDescription": "Configure reusable permission sets.",
+      "usersDescription": "Assign one or more roles to each user."
+    },
+    "roles": {
+      "title": "Roles",
+      "description": "System roles are synchronized by the bootstrap and cannot be edited here.",
+      "create": "Create role",
+      "closeCreate": "Close create form",
+      "createLabel": "Create role",
+      "search": "Search roles",
+      "searchPlaceholder": "Search by name or description",
+      "count": "{visible} of {total, plural, one {# role} other {# roles}}",
+      "empty": "No roles match your search.",
+      "saved": "Role saved",
+      "deleted": "Role deleted",
+      "save": "Save role",
+      "managed": "Managed by the system",
+      "managedDescription": "This role is managed by the system. You can inspect its details, but it cannot be edited or deleted.",
+      "permissionCount": "{count, plural, one {# permission} other {# permissions}}"
+    },
+    "users": {
+      "title": "Users",
+      "description": "Every user must retain at least one role.",
+      "saveAssignments": "Save assignments",
+      "updated": "Roles updated"
+    },
+    "sections": {
+      "profile": "Profile",
+      "authorization": "Authorization"
+    },
+    "permissions": {
+      "profile": {
+        "read": {
+          "own": { "name": "View own profile", "description": "View personal profile details" }
+        },
+        "update": {
+          "own": {
+            "name": "Update own profile",
+            "description": "Update personal profile details, avatar, and password"
+          }
+        }
+      },
+      "authorization": {
+        "roles": {
+          "read": { "name": "View roles", "description": "View roles and their permissions" },
+          "create": { "name": "Create roles", "description": "Create configurable roles" },
+          "update": { "name": "Update roles", "description": "Update configurable roles" },
+          "delete": { "name": "Delete roles", "description": "Delete configurable roles" }
+        },
+        "users": {
+          "read": { "name": "View users", "description": "View users and their role assignments" }
+        },
+        "user-roles": {
+          "update": { "name": "Manage user roles", "description": "Assign and revoke user roles" }
+        },
+        "audit": {
+          "read": {
+            "name": "View authorization audit",
+            "description": "View authorization audit events"
+          }
+        }
+      }
+    },
+    "systemRoles": {
+      "admin": { "name": "Administrator", "description": "Full application administration" },
+      "member": { "name": "Member", "description": "Standard application access" }
+    },
+    "errors": {
+      "validation": "Please correct the highlighted fields.",
+      "forbidden": "You do not have permission to perform this action.",
+      "roleNotFound": "Role not found",
+      "systemRoleModify": "System roles cannot be modified",
+      "managementAccess": "This change would remove your role management access",
+      "roleKeyConflict": "A role with this key already exists",
+      "roleKeyEmpty": "Role name must contain letters or numbers",
+      "saveFailed": "Unable to save role",
+      "invalidRole": "Invalid role",
+      "systemRoleDelete": "System roles cannot be deleted",
+      "roleAssigned": "Remove this role from all users before deleting it",
+      "deleteFailed": "Unable to delete role",
+      "invalidAssignment": "Invalid role assignment",
+      "userNotFound": "User not found",
+      "invalidRoles": "One or more roles are invalid",
+      "adminMissing": "The admin role has not been bootstrapped",
+      "administrativeAccess": "This assignment would remove required administrative access",
+      "updateFailed": "Unable to update roles"
+    },
+    "validation": {
+      "roleNameMin": "Role name must be at least 2 characters",
+      "roleNameMax": "Role name must be at most 80 characters",
+      "descriptionMax": "Description must be at most 240 characters",
+      "permissionRequired": "Select at least one permission",
+      "roleRequired": "Each user must have at least one role"
+    }
+  },
+  "errors": {
+    "forbiddenTitle": "Access denied",
+    "forbiddenDescription": "You do not have permission to view this resource.",
+    "returnDashboard": "Return to dashboard",
+    "notFoundDescription": "The page you are looking for does not exist.",
+    "goBack": "Go back",
+    "goHome": "Go home"
+  },
+  "ui": {
+    "pagination": "Pagination",
+    "breadcrumb": "Breadcrumb",
+    "more": "More",
+    "morePages": "More pages",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page"
+  },
+  "emails": {
+    "account": {
+      "subject": "Verify your account",
+      "heading": "Verify your account",
+      "message": "Please verify your email address to finish setting up your account.",
+      "button": "Verify email"
+    },
+    "emailChange": {
+      "subject": "Confirm your new email",
+      "heading": "Confirm your new email",
+      "message": "Please verify this email address to apply it to your account.",
+      "button": "Confirm new email"
+    },
+    "greeting": "Hello {name},",
+    "ignore": "If you did not request this, you can ignore this email."
+  }
+}

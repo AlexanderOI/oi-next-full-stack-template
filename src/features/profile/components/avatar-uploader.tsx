@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { updateAvatar } from "../actions/update-avatar";
@@ -13,6 +14,7 @@ interface AvatarUploaderProps {
 }
 
 export function AvatarUploader({ user }: AvatarUploaderProps) {
+  const t = useTranslations("profile");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -35,12 +37,12 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.error(t("validation.imageType"));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 5MB");
+      toast.error(t("validation.imageSize"));
       return;
     }
 
@@ -52,13 +54,23 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
         const result = await updateAvatar(file);
 
         if (!result.success) {
-          throw new Error(result.error);
+          toast.error(
+            t(
+              result.code === "AVATAR_TOO_LARGE"
+                ? "validation.imageSize"
+                : result.code === "AVATAR_INVALID_TYPE"
+                  ? "validation.imageType"
+                  : "errors.avatarFailed"
+            )
+          );
+          setPreview(null);
+          return;
         }
 
-        toast.success("Avatar updated");
-      } catch (error) {
+        toast.success(t("avatarUpdated"));
+      } catch {
         setPreview(null);
-        toast.error(error instanceof Error ? error.message : "Failed to upload image");
+        toast.error(t("errors.avatarFailed"));
       } finally {
         if (objectUrl) URL.revokeObjectURL(objectUrl);
         e.target.value = "";
@@ -72,6 +84,7 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
         type="button"
         onClick={handleClick}
         disabled={isPending}
+        aria-label={t("uploadAvatarLabel")}
         className="group relative cursor-pointer"
       >
         <Avatar className="size-36">
@@ -86,7 +99,7 @@ export function AvatarUploader({ user }: AvatarUploaderProps) {
           )}
         </div>
       </button>
-      <p className="text-muted-foreground text-xs">Click to upload avatar</p>
+      <p className="text-muted-foreground text-xs">{t("uploadAvatar")}</p>
       <input
         ref={fileInputRef}
         type="file"

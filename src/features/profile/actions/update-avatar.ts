@@ -21,7 +21,11 @@ export async function updateAvatar(file: File) {
     const parsed = avatarSchema.safeParse(file);
 
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid image URL" };
+      const tooLarge = parsed.error.issues.some((issue) => issue.code === "too_big");
+      return {
+        success: false,
+        code: tooLarge ? ("AVATAR_TOO_LARGE" as const) : ("AVATAR_INVALID_TYPE" as const),
+      };
     }
 
     const requestHeaders = await headers();
@@ -44,10 +48,7 @@ export async function updateAvatar(file: File) {
     revalidatePath("/profile");
 
     return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update avatar",
-    };
+  } catch {
+    return { success: false, code: "AVATAR_UPDATE_FAILED" as const };
   }
 }

@@ -2,6 +2,7 @@
 
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { Plus, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ export function RoleManager({
   roles: readonly RoleSummary[];
   permissionOptions: readonly PermissionSection[];
 }) {
+  const t = useTranslations("authorization.roles");
   const [isCreating, setIsCreating] = useState(false);
   const [query, setQuery] = useState("");
   const createTriggerRef = useRef<HTMLButtonElement>(null);
@@ -42,10 +44,7 @@ export function RoleManager({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Roles"
-        description="System roles are synchronized by the bootstrap and cannot be edited here."
-      >
+      <PageHeader title={t("title")} description={t("description")}>
         <Button
           ref={createTriggerRef}
           type="button"
@@ -54,12 +53,12 @@ export function RoleManager({
           onClick={() => setIsCreating((current) => !current)}
         >
           <Plus aria-hidden="true" data-icon="inline-start" />
-          {isCreating ? "Close create form" : "Create role"}
+          {isCreating ? t("closeCreate") : t("create")}
         </Button>
       </PageHeader>
 
       {isCreating && (
-        <section id="create-role-form" aria-label="Create role">
+        <section id="create-role-form" aria-label={t("createLabel")}>
           <RoleEditor
             permissionOptions={permissionOptions}
             autoFocus
@@ -70,7 +69,7 @@ export function RoleManager({
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="role-search">Search roles</Label>
+        <Label htmlFor="role-search">{t("search")}</Label>
         <div className="relative">
           <Search
             aria-hidden="true"
@@ -81,12 +80,12 @@ export function RoleManager({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by name or description"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
         <p className="text-muted-foreground text-sm" aria-live="polite">
-          {filteredRoles.length} of {roles.length} {roles.length === 1 ? "role" : "roles"}
+          {t("count", { visible: filteredRoles.length, total: roles.length })}
         </p>
       </div>
 
@@ -97,7 +96,7 @@ export function RoleManager({
           ))
         ) : (
           <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center">
-            No roles match your search.
+            {t("empty")}
           </p>
         )}
       </div>

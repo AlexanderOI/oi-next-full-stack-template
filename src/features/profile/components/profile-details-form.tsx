@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { FieldGroup } from "@/components/ui/field";
 
 import { updateProfile } from "../actions/update-profile";
-import { type ProfileInput, type ProfileUser, profileSchema } from "../contracts";
+import { createProfileSchema, type ProfileInput, type ProfileUser } from "../contracts";
 
 interface ProfileDetailsFormProps {
   user: ProfileUser;
@@ -20,10 +21,13 @@ interface ProfileDetailsFormProps {
 
 export function ProfileDetailsForm({ user }: ProfileDetailsFormProps) {
   const router = useRouter();
+  const t = useTranslations("profile");
+  const common = useTranslations("common");
+  const validation = useTranslations("profile.validation");
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<ProfileInput>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(createProfileSchema(validation)),
     defaultValues: {
       name: user.name,
       username: user.username || "",
@@ -40,21 +44,30 @@ export function ProfileDetailsForm({ user }: ProfileDetailsFormProps) {
           for (const [field, messages] of Object.entries(result.details)) {
             const message = messages?.[0];
             if (message) {
-              form.setError(field as keyof ProfileInput, { message });
+              form.setError(field as keyof ProfileInput, {
+                message:
+                  message === "usernameTaken"
+                    ? t("errors.usernameTaken")
+                    : validation(message as never),
+              });
             }
           }
         }
 
-        toast.error(result.error);
+        const errorKey =
+          result.code === "USERNAME_TAKEN"
+            ? "errors.usernameTaken"
+            : result.code === "EMAIL_VERIFICATION_FAILED"
+              ? "errors.partialEmailFailure"
+              : result.code === "VALIDATION_ERROR"
+                ? "errors.validation"
+                : "errors.updateFailed";
+        toast.error(t(errorKey));
         if (result.profileUpdated) router.refresh();
         return;
       }
 
-      toast.success(
-        result.emailVerificationSent
-          ? "Profile updated. Check your new email to confirm the address change."
-          : "Profile updated"
-      );
+      toast.success(result.emailVerificationSent ? t("updatedEmailPending") : t("updated"));
       router.refresh();
     });
   }
@@ -64,18 +77,18 @@ export function ProfileDetailsForm({ user }: ProfileDetailsFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
-            <FormField name="name" label="Name" required>
+            <FormField name="name" label={common("name")} required>
               <Input autoComplete="name" />
             </FormField>
 
-            <FormField name="username" label="Username" required>
+            <FormField name="username" label={common("username")} required>
               <Input autoComplete="username" />
             </FormField>
 
             <FormField
               name="email"
-              label="Email"
-              description="Changing your email requires verification at the new address."
+              label={common("email")}
+              description={t("emailChangeHint")}
               required
             >
               <Input type="email" autoComplete="email" />
@@ -83,7 +96,7 @@ export function ProfileDetailsForm({ user }: ProfileDetailsFormProps) {
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : "Save changes"}
+                {isPending ? common("saving") : t("saveChanges")}
               </Button>
             </div>
           </FieldGroup>

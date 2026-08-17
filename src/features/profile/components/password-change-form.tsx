@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,13 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { changePassword } from "../actions/change-password";
-import { type PasswordChangeInput, passwordChangeSchema } from "../contracts";
+import { createPasswordChangeSchema, type PasswordChangeInput } from "../contracts";
 
 export function PasswordChangeForm() {
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations("profile");
+  const validation = useTranslations("profile.validation");
 
   const form = useForm<PasswordChangeInput>({
-    resolver: zodResolver(passwordChangeSchema),
+    resolver: zodResolver(createPasswordChangeSchema(validation)),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -29,25 +32,27 @@ export function PasswordChangeForm() {
       const result = await changePassword(data);
 
       if (!result.success) {
-        toast.error(result.error);
+        toast.error(
+          t(result.code === "VALIDATION_ERROR" ? "errors.validation" : "errors.passwordFailed")
+        );
         return;
       }
 
       form.reset();
-      toast.success("Password changed successfully");
+      toast.success(t("passwordChanged"));
     });
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Change Password</CardTitle>
+        <CardTitle>{t("changePassword")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="currentPassword">Current Password</FieldLabel>
+              <FieldLabel htmlFor="currentPassword">{t("currentPassword")}</FieldLabel>
               <Input id="currentPassword" type="password" {...form.register("currentPassword")} />
               <FieldError
                 errors={
@@ -59,7 +64,7 @@ export function PasswordChangeForm() {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="newPassword">New Password</FieldLabel>
+              <FieldLabel htmlFor="newPassword">{t("newPassword")}</FieldLabel>
               <Input id="newPassword" type="password" {...form.register("newPassword")} />
               <FieldError
                 errors={
@@ -71,7 +76,7 @@ export function PasswordChangeForm() {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
+              <FieldLabel htmlFor="confirmPassword">{t("confirmPassword")}</FieldLabel>
               <Input id="confirmPassword" type="password" {...form.register("confirmPassword")} />
               <FieldError
                 errors={
@@ -84,7 +89,7 @@ export function PasswordChangeForm() {
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Changing..." : "Change password"}
+                {isPending ? t("changingPassword") : t("changePassword")}
               </Button>
             </div>
           </FieldGroup>

@@ -1,0 +1,274 @@
+{
+  "common": {
+    "appName": "oi-nextjs",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "username": "Nombre de usuario",
+    "password": "Contraseña",
+    "description": "Descripción",
+    "permissions": "Permisos",
+    "saving": "Guardando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "profile": "Perfil",
+    "settings": "Configuración"
+  },
+  "metadata": {
+    "title": "oi-nextjs",
+    "description": "Plantilla de Next.js con autenticación, temas y una arquitectura preparada para agentes de IA"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Te damos la bienvenida",
+      "description": "Inicia sesión en tu cuenta para continuar",
+      "identifier": "Correo electrónico o nombre de usuario",
+      "identifierPlaceholder": "tu@ejemplo.com o nombre de usuario",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "submit": "Iniciar sesión",
+      "pending": "Iniciando sesión...",
+      "noAccount": "¿No tienes una cuenta?",
+      "signUp": "Regístrate",
+      "unknownError": "Ocurrió un error desconocido"
+    },
+    "signUp": {
+      "title": "Crear una cuenta",
+      "description": "Comienza con tu cuenta gratuita",
+      "namePlaceholder": "María García",
+      "usernamePlaceholder": "maria.garcia",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "passwordHint": "Debe tener al menos 8 caracteres",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Crear cuenta",
+      "pending": "Creando cuenta...",
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Inicia sesión",
+      "verificationSent": "Cuenta creada. Revisa tu correo electrónico para verificarla antes de iniciar sesión.",
+      "failed": "No se pudo crear la cuenta. Inténtalo de nuevo."
+    },
+    "validation": {
+      "identifierRequired": "El correo electrónico o nombre de usuario es obligatorio",
+      "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+      "nameMin": "El nombre debe tener al menos 2 caracteres",
+      "emailInvalid": "La dirección de correo electrónico no es válida",
+      "usernameMin": "El nombre de usuario debe tener al menos 3 caracteres",
+      "usernameMax": "El nombre de usuario debe tener como máximo 30 caracteres",
+      "usernameFormat": "El nombre de usuario solo puede contener letras minúsculas, números y puntos",
+      "passwordsMismatch": "Las contraseñas no coinciden"
+    }
+  },
+  "shell": {
+    "general": "General",
+    "dashboard": "Panel",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "administration": "Administración",
+    "environment": "Entorno",
+    "overview": "Resumen",
+    "monitoring": "Monitorización",
+    "editor": "Editor",
+    "tables": "Tablas",
+    "backups": "Copias de seguridad",
+    "dataMasking": "Enmascaramiento de datos",
+    "backend": "Backend",
+    "dataApi": "API de datos",
+    "authentication": "Autenticación",
+    "permissions": "Permisos",
+    "collapseMenu": "Contraer menú",
+    "expandMenu": "Expandir menú",
+    "signOut": "Cerrar sesión"
+  },
+  "dashboard": { "title": "Panel", "description": "Panel", "empty": "Aún no hay contenido." },
+  "profile": {
+    "title": "Perfil",
+    "manageAccount": "Gestiona tu cuenta",
+    "emailChangeHint": "Cambiar tu correo electrónico requiere verificar la nueva dirección.",
+    "saveChanges": "Guardar cambios",
+    "updated": "Perfil actualizado",
+    "updatedEmailPending": "Perfil actualizado. Revisa tu nuevo correo electrónico para confirmar el cambio de dirección.",
+    "uploadAvatar": "Haz clic para subir una imagen de perfil",
+    "uploadAvatarLabel": "Subir imagen de perfil",
+    "avatarUpdated": "Imagen de perfil actualizada",
+    "changePassword": "Cambiar contraseña",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "changingPassword": "Cambiando...",
+    "passwordChanged": "Contraseña cambiada correctamente",
+    "language": {
+      "title": "Idioma",
+      "description": "Elige el idioma que se usará en tu cuenta.",
+      "label": "Idioma de la aplicación",
+      "en": "Inglés",
+      "es": "Español",
+      "saving": "Cambiando idioma...",
+      "saved": "Idioma actualizado"
+    },
+    "validation": {
+      "nameMin": "El nombre debe tener al menos 2 caracteres",
+      "usernameMin": "El nombre de usuario debe tener al menos 3 caracteres",
+      "usernameMax": "El nombre de usuario debe tener como máximo 30 caracteres",
+      "usernameFormat": "El nombre de usuario solo puede contener letras minúsculas, números y puntos",
+      "emailInvalid": "La dirección de correo electrónico no es válida",
+      "currentPasswordRequired": "La contraseña actual es obligatoria",
+      "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+      "confirmPasswordRequired": "Confirma tu contraseña",
+      "passwordsMismatch": "Las contraseñas no coinciden",
+      "imageType": "Selecciona un archivo de imagen compatible",
+      "imageSize": "La imagen debe ocupar menos de 5 MB"
+    },
+    "errors": {
+      "validation": "Corrige los campos indicados.",
+      "usernameTaken": "El nombre de usuario ya está en uso",
+      "updateFailed": "No se pudo actualizar el perfil",
+      "partialEmailFailure": "Los datos del perfil se actualizaron, pero no se pudo enviar el correo de verificación.",
+      "passwordFailed": "No se pudo cambiar la contraseña",
+      "avatarFailed": "No se pudo actualizar la imagen de perfil",
+      "unauthorized": "Debes iniciar sesión.",
+      "invalidLocale": "El idioma seleccionado no es compatible."
+    }
+  },
+  "authorization": {
+    "admin": {
+      "title": "Administración",
+      "description": "Gestiona el acceso sin asignar permisos directamente a los usuarios.",
+      "rolesDescription": "Configura conjuntos de permisos reutilizables.",
+      "usersDescription": "Asigna uno o más roles a cada usuario."
+    },
+    "roles": {
+      "title": "Roles",
+      "description": "Los roles del sistema se sincronizan durante la inicialización y no se pueden editar aquí.",
+      "create": "Crear rol",
+      "closeCreate": "Cerrar formulario de creación",
+      "createLabel": "Crear rol",
+      "search": "Buscar roles",
+      "searchPlaceholder": "Buscar por nombre o descripción",
+      "count": "{visible} de {total, plural, one {# rol} other {# roles}}",
+      "empty": "Ningún rol coincide con la búsqueda.",
+      "saved": "Rol guardado",
+      "deleted": "Rol eliminado",
+      "save": "Guardar rol",
+      "managed": "Gestionado por el sistema",
+      "managedDescription": "Este rol está gestionado por el sistema. Puedes consultar sus detalles, pero no editarlo ni eliminarlo.",
+      "permissionCount": "{count, plural, one {# permiso} other {# permisos}}"
+    },
+    "users": {
+      "title": "Usuarios",
+      "description": "Cada usuario debe conservar al menos un rol.",
+      "saveAssignments": "Guardar asignaciones",
+      "updated": "Roles actualizados"
+    },
+    "sections": { "profile": "Perfil", "authorization": "Autorización" },
+    "permissions": {
+      "profile": {
+        "read": {
+          "own": {
+            "name": "Ver el perfil propio",
+            "description": "Ver los datos del perfil personal"
+          }
+        },
+        "update": {
+          "own": {
+            "name": "Actualizar el perfil propio",
+            "description": "Actualizar los datos personales, la imagen de perfil y la contraseña"
+          }
+        }
+      },
+      "authorization": {
+        "roles": {
+          "read": { "name": "Ver roles", "description": "Ver los roles y sus permisos" },
+          "create": { "name": "Crear roles", "description": "Crear roles configurables" },
+          "update": { "name": "Actualizar roles", "description": "Actualizar roles configurables" },
+          "delete": { "name": "Eliminar roles", "description": "Eliminar roles configurables" }
+        },
+        "users": {
+          "read": {
+            "name": "Ver usuarios",
+            "description": "Ver los usuarios y sus asignaciones de roles"
+          }
+        },
+        "user-roles": {
+          "update": {
+            "name": "Gestionar roles de usuario",
+            "description": "Asignar y revocar roles"
+          }
+        },
+        "audit": {
+          "read": {
+            "name": "Ver la auditoría de autorización",
+            "description": "Ver los eventos de auditoría de autorización"
+          }
+        }
+      }
+    },
+    "systemRoles": {
+      "admin": {
+        "name": "Administrador",
+        "description": "Administración completa de la aplicación"
+      },
+      "member": { "name": "Miembro", "description": "Acceso estándar a la aplicación" }
+    },
+    "errors": {
+      "validation": "Corrige los campos indicados.",
+      "forbidden": "No tienes permiso para realizar esta acción.",
+      "roleNotFound": "No se encontró el rol",
+      "systemRoleModify": "Los roles del sistema no se pueden modificar",
+      "managementAccess": "Este cambio eliminaría tu acceso a la gestión de roles",
+      "roleKeyConflict": "Ya existe un rol con esta clave",
+      "roleKeyEmpty": "El nombre del rol debe contener letras o números",
+      "saveFailed": "No se pudo guardar el rol",
+      "invalidRole": "El rol no es válido",
+      "systemRoleDelete": "Los roles del sistema no se pueden eliminar",
+      "roleAssigned": "Retira este rol de todos los usuarios antes de eliminarlo",
+      "deleteFailed": "No se pudo eliminar el rol",
+      "invalidAssignment": "La asignación de roles no es válida",
+      "userNotFound": "No se encontró el usuario",
+      "invalidRoles": "Uno o más roles no son válidos",
+      "adminMissing": "El rol de administrador no se ha inicializado",
+      "administrativeAccess": "Esta asignación eliminaría el acceso administrativo requerido",
+      "updateFailed": "No se pudieron actualizar los roles"
+    },
+    "validation": {
+      "roleNameMin": "El nombre del rol debe tener al menos 2 caracteres",
+      "roleNameMax": "El nombre del rol debe tener como máximo 80 caracteres",
+      "descriptionMax": "La descripción debe tener como máximo 240 caracteres",
+      "permissionRequired": "Selecciona al menos un permiso",
+      "roleRequired": "Cada usuario debe tener al menos un rol"
+    }
+  },
+  "errors": {
+    "forbiddenTitle": "Acceso denegado",
+    "forbiddenDescription": "No tienes permiso para ver este recurso.",
+    "returnDashboard": "Volver al panel",
+    "notFoundDescription": "La página que buscas no existe.",
+    "goBack": "Volver",
+    "goHome": "Ir al inicio"
+  },
+  "ui": {
+    "pagination": "Paginación",
+    "breadcrumb": "Migas de pan",
+    "more": "Más",
+    "morePages": "Más páginas",
+    "close": "Cerrar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "previousPage": "Ir a la página anterior",
+    "nextPage": "Ir a la página siguiente"
+  },
+  "emails": {
+    "account": {
+      "subject": "Verifica tu cuenta",
+      "heading": "Verifica tu cuenta",
+      "message": "Verifica tu dirección de correo electrónico para terminar de configurar tu cuenta.",
+      "button": "Verificar correo electrónico"
+    },
+    "emailChange": {
+      "subject": "Confirma tu nuevo correo electrónico",
+      "heading": "Confirma tu nuevo correo electrónico",
+      "message": "Verifica esta dirección de correo electrónico para aplicarla a tu cuenta.",
+      "button": "Confirmar nuevo correo electrónico"
+    },
+    "greeting": "Hola, {name}:",
+    "ignore": "Si no solicitaste este cambio, puedes ignorar este correo electrónico."
+  }
+}

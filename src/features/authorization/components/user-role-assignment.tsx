@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { replaceUserRoles } from "../actions/manage-user-roles";
-import type { RoleSummary, UserRoleSummary } from "../contracts";
+import { authorizationErrorKeys, type RoleSummary, type UserRoleSummary } from "../contracts";
 
 export function UserRoleAssignment({
   user,
@@ -16,6 +17,9 @@ export function UserRoleAssignment({
   user: UserRoleSummary;
   roles: readonly RoleSummary[];
 }) {
+  const t = useTranslations("authorization.users");
+  const common = useTranslations("common");
+  const errors = useTranslations("authorization.errors");
   const [selected, setSelected] = useState([...user.roleIds]);
   const [isPending, startTransition] = useTransition();
 
@@ -48,12 +52,12 @@ export function UserRoleAssignment({
         onClick={() =>
           startTransition(async () => {
             const result = await replaceUserRoles({ userId: user.id, roleIds: selected });
-            if (result.success) toast.success("Roles updated");
-            else toast.error(result.error);
+            if (result.success) toast.success(t("updated"));
+            else toast.error(errors(authorizationErrorKeys[result.code] as never));
           })
         }
       >
-        {isPending ? "Saving..." : "Save assignments"}
+        {isPending ? common("saving") : t("saveAssignments")}
       </Button>
     </section>
   );

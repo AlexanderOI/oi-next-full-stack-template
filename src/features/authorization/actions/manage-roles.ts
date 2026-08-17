@@ -23,7 +23,7 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
     );
     const parsed = roleInputSchema.safeParse(input);
     if (!parsed.success) {
-      return { success: false, error: "Validation failed", details: getFieldErrors(parsed.error) };
+      return { success: false, code: "VALIDATION_ERROR", details: getFieldErrors(parsed.error) };
     }
 
     const key = deriveRoleKey(parsed.data.name);
@@ -35,8 +35,8 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
           .from(role)
           .where(eq(role.id, id))
           .limit(1);
-        if (!existing) throw new Error("Role not found");
-        if (existing.isSystem) throw new Error("System roles cannot be modified");
+        if (!existing) throw new Error("ROLE_NOT_FOUND");
+        if (existing.isSystem) throw new Error("SYSTEM_ROLE_MODIFY");
 
         if (!parsed.data.permissions.includes(PERMISSIONS.ROLES_UPDATE)) {
           const [actorHasOtherManagementRole] = await tx
@@ -57,7 +57,7 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
             .where(and(eq(userRole.userId, session.user.id), eq(userRole.roleId, id)))
             .limit(1);
           if (actorHasTargetRole && !actorHasOtherManagementRole) {
-            throw new Error("This change would remove your role management access");
+            throw new Error("MANAGEMENT_ACCESS");
           }
         }
         const [keyConflict] = await tx
@@ -107,22 +107,29 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
     revalidatePath("/admin/roles");
     return { success: true, data: { id } };
   } catch (error) {
-    const safeMessages = new Set([
-      "Forbidden",
-      "Role not found",
-      "System roles cannot be modified",
-      "This change would remove your role management access",
+    const safeCodes = new Set([
+      "FORBIDDEN",
+      "ROLE_NOT_FOUND",
+      "SYSTEM_ROLE_MODIFY",
+      "MANAGEMENT_ACCESS",
       ROLE_KEY_CONFLICT_ERROR,
       ROLE_KEY_EMPTY_ERROR,
     ]);
     const message = error instanceof Error ? error.message : "";
     return {
       success: false,
-      error: isUniqueConstraintError(error)
+      code: (isUniqueConstraintError(error)
         ? ROLE_KEY_CONFLICT_ERROR
-        : safeMessages.has(message)
+        : safeCodes.has(message)
           ? message
-          : "Unable to save role",
+          : "SAVE_FAILED") as
+        | "FORBIDDEN"
+        | "ROLE_NOT_FOUND"
+        | "SYSTEM_ROLE_MODIFY"
+        | "MANAGEMENT_ACCESS"
+        | "ROLE_KEY_CONFLICT"
+        | "ROLE_KEY_EMPTY"
+        | "SAVE_FAILED",
     };
   }
 }
@@ -130,7 +137,7 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
 export async function deleteRole(roleId: string): Promise<ActionResult> {
   try {
     const session = await requireAuthorizedSession(PERMISSIONS.ROLES_DELETE);
-    if (!roleId) return { success: false, error: "Invalid role" };
+    if (!roleId) return { success: false, code: "INVALID_ROLE" };
 
     await db.transaction(async (tx) => {
       const [existing] = await tx
@@ -138,14 +145,14 @@ export async function deleteRole(roleId: string): Promise<ActionResult> {
         .from(role)
         .where(eq(role.id, roleId))
         .limit(1);
-      if (!existing) throw new Error("Role not found");
-      if (existing.isSystem) throw new Error("System roles cannot be deleted");
+      if (!existing) throw new Error("ROLE_NOT_FOUND");
+      if (existing.isSystem) throw new Error("SYSTEM_ROLE_DELETE");
       const [assignment] = await tx
         .select({ userId: userRole.userId })
         .from(userRole)
         .where(eq(userRole.roleId, roleId))
         .limit(1);
-      if (assignment) throw new Error("Remove this role from all users before deleting it");
+      if (assignment) throw new Error("ROLE_ASSIGNED");
 
       await tx.delete(role).where(eq(role.id, roleId));
       await tx.insert(authorizationAudit).values({
@@ -162,13 +169,17 @@ export async function deleteRole(roleId: string): Promise<ActionResult> {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    const safeMessages = new Set([
-      "Forbidden",
-      "Role not found",
-      "System roles cannot be deleted",
-      "Remove this role from all users before deleting it",
+    const safeCodes = new Set([
+      "FORBIDDEN",
+      "ROLE_NOT_FOUND",
+      "SYSTEM_ROLE_DELETE",
+      "ROLE_ASSIGNED",
     ]);
     const message = error instanceof Error ? error.message : "";
-    return { success: false, error: safeMessages.has(message) ? message : "Unable to delete role" };
+    return {
+      success: false,
+      code: (safeCodes.has(message) ? message : "DELETE_FAILED") as
+        "FORBIDDEN" | "ROLE_NOT_FOUND" | "SYSTEM_ROLE_DELETE" | "ROLE_ASSIGNED" | "DELETE_FAILED",
+    };
   }
 }

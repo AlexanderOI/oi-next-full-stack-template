@@ -6,29 +6,69 @@ export interface ProfileUser {
   email: string;
   username: string | null;
   image: string | null;
+  locale: "en" | "es" | null;
 }
 
-export const profileSchema = z.object({
-  name: z.string().trim().min(2, "Name must be at least 2 characters"),
-  username: z
-    .string()
-    .trim()
-    .min(3, "Username must be at least 3 characters")
-    .max(30, "Username must be at most 30 characters")
-    .regex(/^[a-z0-9.]+$/, "Username can only contain lowercase letters, numbers, and dots"),
-  email: z.string().trim().toLowerCase().pipe(z.email("Invalid email address")),
-});
+export interface ProfileInput {
+  name: string;
+  username: string;
+  email: string;
+}
 
-export const passwordChangeSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+export interface PasswordChangeInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export type ProfileErrorCode =
+  | "VALIDATION_ERROR"
+  | "USERNAME_TAKEN"
+  | "UPDATE_FAILED"
+  | "EMAIL_VERIFICATION_FAILED"
+  | "PASSWORD_CHANGE_FAILED"
+  | "AVATAR_INVALID_TYPE"
+  | "AVATAR_TOO_LARGE"
+  | "AVATAR_UPDATE_FAILED";
+
+type ValidationKey =
+  | "nameMin"
+  | "usernameMin"
+  | "usernameMax"
+  | "usernameFormat"
+  | "emailInvalid"
+  | "currentPasswordRequired"
+  | "passwordMin"
+  | "confirmPasswordRequired"
+  | "passwordsMismatch";
+type TranslateValidation = (key: ValidationKey) => string;
+
+export function createProfileSchema(t: TranslateValidation) {
+  return z.object({
+    name: z.string().trim().min(2, t("nameMin")),
+    username: z
+      .string()
+      .trim()
+      .min(3, t("usernameMin"))
+      .max(30, t("usernameMax"))
+      .regex(/^[a-z0-9.]+$/, t("usernameFormat")),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .pipe(z.email(t("emailInvalid"))),
   });
+}
 
-export type ProfileInput = z.infer<typeof profileSchema>;
-export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
+export function createPasswordChangeSchema(t: TranslateValidation) {
+  return z
+    .object({
+      currentPassword: z.string().min(1, t("currentPasswordRequired")),
+      newPassword: z.string().min(8, t("passwordMin")),
+      confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("passwordsMismatch"),
+      path: ["confirmPassword"],
+    });
+}

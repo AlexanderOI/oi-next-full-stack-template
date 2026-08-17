@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -14,6 +15,7 @@ import {
 import { signOut } from "@/features/auth/client";
 
 export function AppHeader() {
+  const t = useTranslations("shell");
   const router = useRouter();
 
   async function handleSignOut() {
@@ -38,11 +40,11 @@ export function AppHeader() {
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" side="bottom" sideOffset={8}>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem>{t("profile")}</DropdownMenuItem>
+          <DropdownMenuItem>{t("settings")}</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} variant="destructive">
-            Sign out
+            {t("signOut")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

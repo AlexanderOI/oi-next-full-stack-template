@@ -1,9 +1,11 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+import { fallbackLocale, localeSchema } from "@/i18n/config";
 
 export const env = createEnv({
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    APP_DEFAULT_LOCALE: localeSchema.catch(fallbackLocale).default(fallbackLocale),
     DATABASE_URL: z.url(),
     CLOUDINARY_CLOUD_NAME: z.string().optional(),
     CLOUDINARY_API_KEY: z.string().optional(),
@@ -22,6 +24,7 @@ export const env = createEnv({
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    APP_DEFAULT_LOCALE: process.env.APP_DEFAULT_LOCALE,
     DATABASE_URL: process.env.DATABASE_URL,
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,

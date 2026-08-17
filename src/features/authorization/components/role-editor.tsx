@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { ChevronDown, Info } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteRole, saveRole } from "../actions/manage-roles";
-import type { PermissionKey, RoleSummary } from "../contracts";
+import { authorizationErrorKeys, type PermissionKey, type RoleSummary } from "../contracts";
 
 export function RoleEditor({
   role,
@@ -29,6 +30,9 @@ export function RoleEditor({
   onCancel?: () => void;
   onSaved?: () => void;
 }) {
+  const t = useTranslations("authorization.roles");
+  const common = useTranslations("common");
+  const errors = useTranslations("authorization.errors");
   const [selected, setSelected] = useState<PermissionKey[]>(role ? [...role.permissions] : []);
   const [isPending, startTransition] = useTransition();
 
@@ -41,9 +45,9 @@ export function RoleEditor({
         permissions: selected,
       });
       if (result.success) {
-        toast.success("Role saved");
+        toast.success(t("saved"));
         onSaved?.();
-      } else toast.error(result.error);
+      } else toast.error(errors(authorizationErrorKeys[result.code] as never));
     });
   }
 
@@ -51,15 +55,15 @@ export function RoleEditor({
     if (!role) return;
     startTransition(async () => {
       const result = await deleteRole(role.id);
-      if (result.success) toast.success("Role deleted");
-      else toast.error(result.error);
+      if (result.success) toast.success(t("deleted"));
+      else toast.error(errors(authorizationErrorKeys[result.code] as never));
     });
   }
 
   const form = (
     <form action={submit} className="space-y-4 p-4">
       <div className="space-y-2">
-        <Label htmlFor={`name-${role?.id ?? "new"}`}>Name</Label>
+        <Label htmlFor={`name-${role?.id ?? "new"}`}>{common("name")}</Label>
         <Input
           id={`name-${role?.id ?? "new"}`}
           name="name"
@@ -70,7 +74,7 @@ export function RoleEditor({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`description-${role?.id ?? "new"}`}>Description</Label>
+        <Label htmlFor={`description-${role?.id ?? "new"}`}>{common("description")}</Label>
         <Textarea
           id={`description-${role?.id ?? "new"}`}
           name="description"
@@ -79,7 +83,7 @@ export function RoleEditor({
         />
       </div>
       <fieldset disabled={role?.isSystem || isPending} className="space-y-4">
-        <legend className="mb-2 text-sm font-medium">Permissions</legend>
+        <legend className="mb-2 text-sm font-medium">{common("permissions")}</legend>
         {permissionOptions.map((section) => (
           <fieldset key={section.name} className="space-y-2">
             <legend className="text-muted-foreground text-sm font-medium">{section.name}</legend>
@@ -110,16 +114,16 @@ export function RoleEditor({
         <div className="flex justify-end gap-2">
           {!role && onCancel && (
             <Button type="button" variant="outline" disabled={isPending} onClick={onCancel}>
-              Cancel
+              {common("cancel")}
             </Button>
           )}
           {role && (
             <Button type="button" variant="destructive" disabled={isPending} onClick={remove}>
-              Delete
+              {common("delete")}
             </Button>
           )}
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : "Save role"}
+            {isPending ? common("saving") : t("save")}
           </Button>
         </div>
       )}
@@ -140,13 +144,13 @@ export function RoleEditor({
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{role.name}</span>
           <span className="text-muted-foreground block text-sm">
-            {role.permissions.length} {role.permissions.length === 1 ? "permission" : "permissions"}
+            {t("permissionCount", { count: role.permissions.length })}
           </span>
         </span>
         {role.isSystem && (
           <Badge variant="secondary">
             <Info aria-hidden="true" data-icon="inline-start" />
-            Managed by the system
+            {t("managed")}
           </Badge>
         )}
         <ChevronDown
@@ -156,8 +160,7 @@ export function RoleEditor({
       </summary>
       {role.isSystem && (
         <p className="text-muted-foreground border-t px-4 pt-4 text-sm">
-          This role is managed by the system. You can inspect its details, but it cannot be edited
-          or deleted.
+          {t("managedDescription")}
         </p>
       )}
       {form}

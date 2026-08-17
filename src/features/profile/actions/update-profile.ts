@@ -9,7 +9,9 @@ import { user } from "@/db/schema";
 import { auth } from "@/features/auth/server";
 import { requireAuthorizedSession, PERMISSIONS } from "@/features/authorization/server";
 import { getFieldErrors } from "@/lib/utils";
-import { type ProfileInput, profileSchema } from "../contracts";
+import { createProfileSchema, type ProfileInput } from "../contracts";
+
+const profileSchema = createProfileSchema((key) => key);
 
 export async function updateProfile(data: ProfileInput) {
   let profileUpdated = false;
@@ -21,7 +23,11 @@ export async function updateProfile(data: ProfileInput) {
     const parsed = profileSchema.safeParse(data);
 
     if (!parsed.success) {
-      return { success: false, error: "Validation failed", details: getFieldErrors(parsed.error) };
+      return {
+        success: false,
+        code: "VALIDATION_ERROR" as const,
+        details: getFieldErrors(parsed.error),
+      };
     }
 
     const [existingUsername] = await db
@@ -33,8 +39,8 @@ export async function updateProfile(data: ProfileInput) {
     if (existingUsername) {
       return {
         success: false,
-        error: "Username is already taken",
-        details: { username: ["Username is already taken"] },
+        code: "USERNAME_TAKEN" as const,
+        details: { username: ["usernameTaken"] },
       };
     }
 
@@ -69,13 +75,10 @@ export async function updateProfile(data: ProfileInput) {
 
     return { success: true, user: result, emailVerificationSent: emailChanged };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to update profile";
     return {
       success: false,
       profileUpdated,
-      error: profileUpdated
-        ? `Profile details were updated, but the email verification could not be sent: ${message}`
-        : message,
+      code: profileUpdated ? ("EMAIL_VERIFICATION_FAILED" as const) : ("UPDATE_FAILED" as const),
     };
   }
 }

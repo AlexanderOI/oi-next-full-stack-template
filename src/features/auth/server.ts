@@ -10,8 +10,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { role, schema, userRole } from "@/db/schema";
-import { sendEmail } from "@/services/email/send-email";
-import { accountVerificationEmail, emailChangeVerificationEmail } from "./contracts";
+import { sendLocalizedVerificationEmail } from "./verification-email-delivery";
 
 export const auth = betterAuth({
   emailAndPassword: {
@@ -21,20 +20,13 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     async sendVerificationEmail({ user, url }, request) {
-      const isEmailChange = request
-        ? new URL(request.url).pathname.endsWith("/change-email")
-        : false;
-
-      await sendEmail({
-        to: user.email,
-        subject: isEmailChange ? "Confirm your new email" : "Verify your account",
-        html: isEmailChange
-          ? emailChangeVerificationEmail({ name: user.name, url })
-          : accountVerificationEmail({ name: user.name, url }),
-      });
+      await sendLocalizedVerificationEmail(user, url, request);
     },
   },
   user: {
+    additionalFields: {
+      locale: { type: "string", required: false, input: false },
+    },
     changeEmail: {
       enabled: true,
       updateEmailWithoutVerification: false,

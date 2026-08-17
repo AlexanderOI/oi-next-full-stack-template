@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import {
   Activity,
   Cloud,
@@ -30,28 +31,28 @@ import {
   type SidebarNavigationItemProps,
 } from "./sidebar-navigation-item";
 
-const generalNav: SidebarNavigationItemProps[] = [
-  { label: "Panel", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Profile", href: "/profile", icon: User },
-  { label: "Settings", href: "/settings", icon: Settings },
-];
-const environmentNav: SidebarNavigationItemProps[] = [
-  { label: "Overview", href: "/dashboard/overview", icon: Activity },
-  { label: "Monitoring", href: "/dashboard/monitoring", icon: Monitor },
-  { label: "Editor", href: "/dashboard/editor", icon: Code2 },
-  { label: "Tables", href: "/dashboard/tables", icon: Table2 },
-  { label: "Backups", href: "/dashboard/backups", icon: DatabaseBackup },
-  { label: "Data Masking", href: "/dashboard/masking", icon: ShieldCheck },
-];
-const backendNav: SidebarNavigationItemProps[] = [
-  { label: "Data API", href: "/dashboard/api", icon: Cloud },
-  { label: "Authentication", href: "/dashboard/auth", icon: KeyRound },
-  { label: "Permissions", href: "/dashboard/permissions", icon: Lock },
-];
-
 export function AppSidebar({ initialCollapsed }: { initialCollapsed: boolean }) {
+  const t = useTranslations("shell");
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [, startTransition] = useTransition();
+  const generalNav: SidebarNavigationItemProps[] = [
+    { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    { label: t("profile"), href: "/profile", icon: User },
+    { label: t("settings"), href: "/settings", icon: Settings },
+  ];
+  const environmentNav: SidebarNavigationItemProps[] = [
+    { label: t("overview"), href: "/dashboard/overview", icon: Activity },
+    { label: t("monitoring"), href: "/dashboard/monitoring", icon: Monitor },
+    { label: t("editor"), href: "/dashboard/editor", icon: Code2 },
+    { label: t("tables"), href: "/dashboard/tables", icon: Table2 },
+    { label: t("backups"), href: "/dashboard/backups", icon: DatabaseBackup },
+    { label: t("dataMasking"), href: "/dashboard/masking", icon: ShieldCheck },
+  ];
+  const backendNav: SidebarNavigationItemProps[] = [
+    { label: t("dataApi"), href: "/dashboard/api", icon: Cloud },
+    { label: t("authentication"), href: "/dashboard/auth", icon: KeyRound },
+    { label: t("permissions"), href: "/dashboard/permissions", icon: Lock },
+  ];
 
   function handleToggle() {
     const nextCollapsed = !collapsed;
@@ -70,25 +71,25 @@ export function AppSidebar({ initialCollapsed }: { initialCollapsed: boolean }) 
     >
       <ScrollArea className="min-h-0 flex-1">
         <nav className="flex flex-col gap-1 px-2 pb-4">
-          <SidebarSectionTitle title="General" collapsed={collapsed} />
+          <SidebarSectionTitle title={t("general")} collapsed={collapsed} />
           {generalNav.map((item) => (
             <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
           ))}
           <Permission permissions={[PERMISSIONS.ROLES_READ, PERMISSIONS.USERS_READ]} match="any">
             <SidebarNavigationItem
-              label="Administration"
+              label={t("administration")}
               href="/admin"
               icon={Users}
               collapsed={collapsed}
             />
           </Permission>
           <SidebarSeparator />
-          <SidebarSectionTitle title="Environment" collapsed={collapsed} />
+          <SidebarSectionTitle title={t("environment")} collapsed={collapsed} />
           {environmentNav.map((item) => (
             <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
           ))}
           <SidebarSeparator />
-          <SidebarSectionTitle title="Backend" collapsed={collapsed} />
+          <SidebarSectionTitle title={t("backend")} collapsed={collapsed} />
           {backendNav.map((item) => (
             <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
           ))}
@@ -98,6 +99,7 @@ export function AppSidebar({ initialCollapsed }: { initialCollapsed: boolean }) 
         <button
           type="button"
           onClick={handleToggle}
+          aria-label={collapsed ? t("expandMenu") : t("collapseMenu")}
           className={cn(
             "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
             collapsed && "justify-center px-0"
@@ -108,7 +110,7 @@ export function AppSidebar({ initialCollapsed }: { initialCollapsed: boolean }) 
           ) : (
             <>
               <PanelLeftClose className="size-4 shrink-0" />
-              <span>Collapse menu</span>
+              <span>{t("collapseMenu")}</span>
             </>
           )}
         </button>

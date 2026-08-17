@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { RoleManager } from "@/features/authorization/client";
 import {
   assertPermission,
-  listRoles,
-  permissionCatalog,
+  getLocalizedPermissionCatalog,
+  listLocalizedRoles,
   PERMISSIONS,
 } from "@/features/authorization/server";
 
@@ -14,7 +14,10 @@ export default async function RolesPage() {
   } catch {
     redirect("/forbidden");
   }
-  const roles = await listRoles();
+  const [roles, permissionCatalog] = await Promise.all([
+    listLocalizedRoles(),
+    getLocalizedPermissionCatalog(),
+  ]);
 
   return <RoleManager roles={roles} permissionOptions={permissionCatalog} />;
 }

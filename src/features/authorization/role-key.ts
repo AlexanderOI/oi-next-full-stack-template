@@ -1,6 +1,5 @@
-export const ROLE_KEY_CONFLICT_ERROR =
-  "A role with this generated key already exists. Choose a different role name.";
-export const ROLE_KEY_EMPTY_ERROR = "Role name must include at least one Latin letter or number.";
+export const ROLE_KEY_CONFLICT_ERROR = "ROLE_KEY_CONFLICT";
+export const ROLE_KEY_EMPTY_ERROR = "ROLE_KEY_EMPTY";
 
 const ROLE_KEY_MAX_LENGTH = 50;
 
