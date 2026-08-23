@@ -15,17 +15,18 @@ import { FieldGroup } from "@/components/ui/field";
 import { updateProfile } from "../actions/update-profile";
 import { createProfileSchema, type ProfileInput, type ProfileUser } from "../contracts";
 
-interface ProfileDetailsFormProps {
+interface Props {
   user: ProfileUser;
 }
 
-export function ProfileDetailsForm({ user }: ProfileDetailsFormProps) {
+export function ProfileDetailsForm({ user }: Props) {
   const router = useRouter();
+
   const t = useTranslations("profile");
   const common = useTranslations("common");
   const validation = useTranslations("profile.validation");
-  const [isPending, startTransition] = useTransition();
 
+  const [isPending, startTransition] = useTransition();
   const form = useForm<ProfileInput>({
     resolver: zodResolver(createProfileSchema(validation)),
     defaultValues: {
@@ -35,7 +36,7 @@ export function ProfileDetailsForm({ user }: ProfileDetailsFormProps) {
     },
   });
 
-  function onSubmit(data: ProfileInput) {
+  function handleSubmit(data: ProfileInput) {
     startTransition(async () => {
       const result = await updateProfile(data);
 
@@ -75,7 +76,7 @@ export function ProfileDetailsForm({ user }: ProfileDetailsFormProps) {
   return (
     <div className="flex flex-col gap-3">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
           <FieldGroup>
             <FormField name="name" label={common("name")} required>
               <Input autoComplete="name" />

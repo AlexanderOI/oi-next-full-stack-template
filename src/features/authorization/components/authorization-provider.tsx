@@ -7,13 +7,12 @@ import { evaluatePermissions } from "../policy";
 
 const AuthorizationContext = createContext<AuthorizationSnapshot | null>(null);
 
-export function AuthorizationProvider({
-  snapshot,
-  children,
-}: {
+interface Props {
   snapshot: AuthorizationSnapshot;
   children: ReactNode;
-}) {
+}
+
+export function AuthorizationProvider({ snapshot, children }: Props) {
   return <AuthorizationContext value={snapshot}>{children}</AuthorizationContext>;
 }
 

@@ -8,19 +8,21 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteRole, saveRole } from "../actions/manage-roles";
 import { authorizationErrorKeys, type PermissionKey, type RoleSummary } from "../contracts";
 
-export function RoleEditor({
-  role,
-  permissionOptions,
-  autoFocus = false,
-  onCancel,
-  onSaved,
-}: {
+interface Props {
   role?: RoleSummary;
   permissionOptions: readonly {
     name: string;
@@ -29,14 +31,23 @@ export function RoleEditor({
   autoFocus?: boolean;
   onCancel?: () => void;
   onSaved?: () => void;
-}) {
+}
+
+export function RoleEditor({
+  role,
+  permissionOptions,
+  autoFocus = false,
+  onCancel,
+  onSaved,
+}: Props) {
   const t = useTranslations("authorization.roles");
   const common = useTranslations("common");
   const errors = useTranslations("authorization.errors");
+
   const [selected, setSelected] = useState<PermissionKey[]>(role ? [...role.permissions] : []);
   const [isPending, startTransition] = useTransition();
 
-  function submit(formData: FormData) {
+  function handleSubmit(formData: FormData) {
     startTransition(async () => {
       const result = await saveRole({
         id: role?.id,
@@ -51,7 +62,7 @@ export function RoleEditor({
     });
   }
 
-  function remove() {
+  function handleRemove() {
     if (!role) return;
     startTransition(async () => {
       const result = await deleteRole(role.id);
@@ -60,73 +71,95 @@ export function RoleEditor({
     });
   }
 
+  function handlePermissionChange(permission: PermissionKey, checked: boolean | "indeterminate") {
+    setSelected((current) =>
+      checked === true
+        ? [...current, permission]
+        : current.filter((currentPermission) => currentPermission !== permission)
+    );
+  }
+
   const form = (
-    <form action={submit} className="space-y-4 p-4">
-      <div className="space-y-2">
-        <Label htmlFor={`name-${role?.id ?? "new"}`}>{common("name")}</Label>
-        <Input
-          id={`name-${role?.id ?? "new"}`}
-          name="name"
-          defaultValue={role?.name}
-          disabled={role?.isSystem}
-          autoFocus={autoFocus}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`description-${role?.id ?? "new"}`}>{common("description")}</Label>
-        <Textarea
-          id={`description-${role?.id ?? "new"}`}
-          name="description"
-          defaultValue={role?.description}
-          disabled={role?.isSystem}
-        />
-      </div>
-      <fieldset disabled={role?.isSystem || isPending} className="space-y-4">
-        <legend className="mb-2 text-sm font-medium">{common("permissions")}</legend>
-        {permissionOptions.map((section) => (
-          <fieldset key={section.name} className="space-y-2">
-            <legend className="text-muted-foreground text-sm font-medium">{section.name}</legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {section.permissions.map((option) => (
-                <Label key={option.key} className="items-start rounded-md border p-3">
-                  <Checkbox
-                    checked={selected.includes(option.key)}
-                    onCheckedChange={(checked) =>
-                      setSelected((current) =>
-                        checked
-                          ? [...current, option.key]
-                          : current.filter((key) => key !== option.key)
-                      )
-                    }
-                  />
-                  <span>
-                    <span className="block font-medium">{option.name}</span>
-                    <span className="text-muted-foreground font-normal">{option.description}</span>
-                  </span>
-                </Label>
-              ))}
-            </div>
-          </fieldset>
-        ))}
-      </fieldset>
-      {!role?.isSystem && (
-        <div className="flex justify-end gap-2">
-          {!role && onCancel && (
-            <Button type="button" variant="outline" disabled={isPending} onClick={onCancel}>
-              {common("cancel")}
+    <form action={handleSubmit} className="p-4">
+      <FieldGroup className="gap-4">
+        <Field>
+          <FieldLabel htmlFor={`name-${role?.id ?? "new"}`}>{common("name")}</FieldLabel>
+          <Input
+            id={`name-${role?.id ?? "new"}`}
+            name="name"
+            defaultValue={role?.name}
+            disabled={role?.isSystem}
+            autoFocus={autoFocus}
+            required
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`description-${role?.id ?? "new"}`}>
+            {common("description")}
+          </FieldLabel>
+          <Textarea
+            id={`description-${role?.id ?? "new"}`}
+            name="description"
+            defaultValue={role?.description}
+            disabled={role?.isSystem}
+          />
+        </Field>
+        <FieldSet disabled={role?.isSystem || isPending}>
+          <FieldLegend variant="label">{common("permissions")}</FieldLegend>
+          {permissionOptions.map((section) => (
+            <FieldSet key={section.name} className="gap-2">
+              <FieldLegend variant="label" className="text-muted-foreground">
+                {section.name}
+              </FieldLegend>
+              <FieldGroup className="grid gap-2 sm:grid-cols-2">
+                {section.permissions.map((option) => {
+                  const checkboxId = `permission-${role?.id ?? "new"}-${option.key}`;
+
+                  return (
+                    <Field
+                      key={option.key}
+                      orientation="horizontal"
+                      className="items-start rounded-md border p-3"
+                    >
+                      <Checkbox
+                        id={checkboxId}
+                        checked={selected.includes(option.key)}
+                        onCheckedChange={(checked) => handlePermissionChange(option.key, checked)}
+                      />
+                      <FieldContent>
+                        <FieldLabel htmlFor={checkboxId}>{option.name}</FieldLabel>
+                        <FieldDescription>{option.description}</FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  );
+                })}
+              </FieldGroup>
+            </FieldSet>
+          ))}
+        </FieldSet>
+        {!role?.isSystem && (
+          <div className="flex justify-end gap-2">
+            {!role && onCancel && (
+              <Button type="button" variant="outline" disabled={isPending} onClick={onCancel}>
+                {common("cancel")}
+              </Button>
+            )}
+            {role && (
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isPending}
+                onClick={handleRemove}
+              >
+                {common("delete")}
+              </Button>
+            )}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? common("saving") : t("save")}
             </Button>
-          )}
-          {role && (
-            <Button type="button" variant="destructive" disabled={isPending} onClick={remove}>
-              {common("delete")}
-            </Button>
-          )}
-          <Button type="submit" disabled={isPending}>
-            {isPending ? common("saving") : t("save")}
-          </Button>
-        </div>
-      )}
+          </div>
+        )}
+      </FieldGroup>
     </form>
   );
 

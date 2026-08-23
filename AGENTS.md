@@ -20,6 +20,13 @@ These rules are the persistent authority for changes in this repository. Prefer 
 - Generic buckets such as `shared`, `common`, `misc`, or speculative empty directories MUST NOT be created.
 - Names MUST describe responsibility: `ProfileDetailsForm`, `AvatarUploader`, and `AppSidebar` are good; `PageClient`, `DataComponent`, and `utils2` are bad.
 
+## Component Conventions
+
+- Prefer an existing `src/components/ui` primitive over hand-built semantic, form, or control HTML when the primitive genuinely matches the required semantics and behavior. Ordinary structural HTML SHOULD remain HTML, and native FormData or Server Action ownership MUST NOT be replaced with `react-hook-form`; `field.tsx` supports native form semantics, while `form.tsx` is specific to `react-hook-form`.
+- When a component file's main component has props used only in that file, define exactly one non-exported `interface Props`; do not inline the object type in the component signature or name it `<ComponentName>Props`.
+- Inside components, use intentional blank-line groups in this order when present: routing or context hooks, translation hooks, state or transition hooks, refs, derived values or memos, effects, handlers, and render or return. Keep related hooks together and do not separate tightly related statements arbitrarily.
+- Event callbacks containing more than roughly three lines or meaningful branching, asynchronous work, or stateful behavior SHOULD be extracted into responsibility-named `handle*` functions. Truly trivial one-line state updates MAY remain inline, and minimal inline argument binding to a named handler is allowed.
+
 ## Route Files
 
 - Every `page.tsx` and `layout.tsx` MUST be a Server Component and MUST NOT contain `"use client"`.

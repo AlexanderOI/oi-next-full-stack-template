@@ -15,8 +15,9 @@ import {
 import { signOut } from "@/features/auth/client";
 
 export function AppHeader() {
-  const t = useTranslations("shell");
   const router = useRouter();
+
+  const t = useTranslations("shell");
 
   async function handleSignOut() {
     await signOut();

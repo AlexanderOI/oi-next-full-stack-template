@@ -9,15 +9,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { updateAvatar } from "../actions/update-avatar";
 import type { ProfileUser } from "../contracts";
 
-interface AvatarUploaderProps {
+interface Props {
   user: ProfileUser;
 }
 
-export function AvatarUploader({ user }: AvatarUploaderProps) {
+export function AvatarUploader({ user }: Props) {
   const t = useTranslations("profile");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [preview, setPreview] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initials = user.name
     .split(" ")

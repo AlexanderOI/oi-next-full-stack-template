@@ -24,6 +24,7 @@ export function SignUpForm() {
   const t = useTranslations("auth.signUp");
   const common = useTranslations("common");
   const validation = useTranslations("auth.validation");
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -32,7 +33,7 @@ export function SignUpForm() {
     defaultValues: { name: "", email: "", username: "", password: "", confirmPassword: "" },
   });
 
-  async function onSubmit(data: RegisterInput) {
+  async function handleSubmit(data: RegisterInput) {
     setIsLoading(true);
     setError(null);
     setVerificationSent(false);
@@ -60,7 +61,7 @@ export function SignUpForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             {error && (
               <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
                 {error}

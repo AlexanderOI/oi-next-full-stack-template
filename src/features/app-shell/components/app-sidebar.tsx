@@ -31,10 +31,16 @@ import {
   type SidebarNavigationItemProps,
 } from "./sidebar-navigation-item";
 
-export function AppSidebar({ initialCollapsed }: { initialCollapsed: boolean }) {
+interface Props {
+  initialCollapsed: boolean;
+}
+
+export function AppSidebar({ initialCollapsed }: Props) {
   const t = useTranslations("shell");
+
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [, startTransition] = useTransition();
+
   const generalNav: SidebarNavigationItemProps[] = [
     { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
     { label: t("profile"), href: "/profile", icon: User },

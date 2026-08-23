@@ -23,9 +23,11 @@ import { createLoginSchema, type LoginInput } from "../contracts";
 
 export function SignInForm() {
   const router = useRouter();
+
   const t = useTranslations("auth.signIn");
   const common = useTranslations("common");
   const validation = useTranslations("auth.validation");
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<LoginInput>({
@@ -33,7 +35,7 @@ export function SignInForm() {
     defaultValues: { identifier: "", password: "" },
   });
 
-  async function onSubmit(data: LoginInput) {
+  async function handleSubmit(data: LoginInput) {
     setIsLoading(true);
     setError(null);
 
@@ -54,7 +56,7 @@ export function SignInForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             {error && (
               <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
                 {error}

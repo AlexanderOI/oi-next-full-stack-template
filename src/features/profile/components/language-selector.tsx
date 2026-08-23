@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { Label } from "@/components/ui/label";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -16,9 +16,15 @@ import {
 import { locales, type Locale } from "@/i18n/config";
 import { updateLocale } from "../actions/update-locale";
 
-export function LanguageSelector({ locale }: { locale: Locale }) {
+interface Props {
+  locale: Locale;
+}
+
+export function LanguageSelector({ locale }: Props) {
   const router = useRouter();
+
   const t = useTranslations("profile");
+
   const [isPending, startTransition] = useTransition();
 
   function handleChange(value: Locale | null) {
@@ -41,8 +47,8 @@ export function LanguageSelector({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor="application-language">{t("language.label")}</Label>
+    <Field>
+      <FieldLabel htmlFor="application-language">{t("language.label")}</FieldLabel>
       <Select value={locale} onValueChange={handleChange} disabled={isPending}>
         <SelectTrigger id="application-language" className="w-full" aria-busy={isPending}>
           <SelectValue />
@@ -55,9 +61,9 @@ export function LanguageSelector({ locale }: { locale: Locale }) {
           ))}
         </SelectContent>
       </Select>
-      <p className="text-muted-foreground text-sm" aria-live="polite">
+      <FieldDescription aria-live="polite">
         {isPending ? t("language.saving") : t("language.description")}
-      </p>
-    </div>
+      </FieldDescription>
+    </Field>
   );
 }

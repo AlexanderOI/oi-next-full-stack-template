@@ -29,7 +29,9 @@ export function SidebarNavigationItem({
   indent = false,
 }: SidebarNavigationItemProps) {
   const pathname = usePathname();
+
   const [isOpen, setIsOpen] = useState(false);
+
   const hasChildren = Boolean(children?.length);
   const isActive = active || (href && pathname === href);
   const classes = cn(
@@ -40,6 +42,10 @@ export function SidebarNavigationItem({
     collapsed && "justify-center px-0",
     indent && !collapsed && "pl-8"
   );
+
+  function handleToggleChildren() {
+    if (hasChildren) setIsOpen((current) => !current);
+  }
 
   if (href && !hasChildren) {
     const link = (
@@ -62,7 +68,7 @@ export function SidebarNavigationItem({
   }
 
   const button = (
-    <button type="button" onClick={() => hasChildren && setIsOpen(!isOpen)} className={classes}>
+    <button type="button" onClick={handleToggleChildren} className={classes}>
       <Icon className="size-4 shrink-0" />
       {!collapsed && (
         <>

@@ -14,10 +14,10 @@ import { changePassword } from "../actions/change-password";
 import { createPasswordChangeSchema, type PasswordChangeInput } from "../contracts";
 
 export function PasswordChangeForm() {
-  const [isPending, startTransition] = useTransition();
   const t = useTranslations("profile");
   const validation = useTranslations("profile.validation");
 
+  const [isPending, startTransition] = useTransition();
   const form = useForm<PasswordChangeInput>({
     resolver: zodResolver(createPasswordChangeSchema(validation)),
     defaultValues: {
@@ -27,7 +27,7 @@ export function PasswordChangeForm() {
     },
   });
 
-  function onSubmit(data: PasswordChangeInput) {
+  function handleSubmit(data: PasswordChangeInput) {
     startTransition(async () => {
       const result = await changePassword(data);
 
@@ -49,7 +49,7 @@ export function PasswordChangeForm() {
         <CardTitle>{t("changePassword")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="currentPassword">{t("currentPassword")}</FieldLabel>

@@ -11,19 +11,21 @@ import { PageHeader } from "@/components/ui/page-header";
 import type { PermissionSection, RoleSummary } from "../contracts";
 import { RoleEditor } from "./role-editor";
 
-export function RoleManager({
-  roles,
-  permissionOptions,
-}: {
+interface Props {
   roles: readonly RoleSummary[];
   permissionOptions: readonly PermissionSection[];
-}) {
+}
+
+export function RoleManager({ roles, permissionOptions }: Props) {
   const t = useTranslations("authorization.roles");
+
   const [isCreating, setIsCreating] = useState(false);
   const [query, setQuery] = useState("");
+
   const createTriggerRef = useRef<HTMLButtonElement>(null);
   const shouldRestoreFocusRef = useRef(false);
   const deferredQuery = useDeferredValue(query.trim().toLocaleLowerCase());
+
   const filteredRoles = roles.filter(
     ({ name, description }) =>
       name.toLocaleLowerCase().includes(deferredQuery) ||
@@ -37,7 +39,7 @@ export function RoleManager({
     }
   }, [isCreating]);
 
-  function closeCreateForm() {
+  function handleCloseCreateForm() {
     shouldRestoreFocusRef.current = true;
     setIsCreating(false);
   }
@@ -62,8 +64,8 @@ export function RoleManager({
           <RoleEditor
             permissionOptions={permissionOptions}
             autoFocus
-            onCancel={closeCreateForm}
-            onSaved={closeCreateForm}
+            onCancel={handleCloseCreateForm}
+            onSaved={handleCloseCreateForm}
           />
         </section>
       )}
