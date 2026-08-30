@@ -2,23 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Activity,
-  Cloud,
-  Code2,
-  DatabaseBackup,
-  KeyRound,
-  LayoutDashboard,
-  Lock,
-  Monitor,
-  PanelLeft,
-  PanelLeftClose,
-  Settings,
-  ShieldCheck,
-  Table2,
-  User,
-  Users,
-} from "lucide-react";
+import { LayoutDashboard, PanelLeft, PanelLeftClose, ShieldCheck, User, Users } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -44,20 +28,6 @@ export function AppSidebar({ initialCollapsed }: Props) {
   const generalNav: SidebarNavigationItemProps[] = [
     { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
     { label: t("profile"), href: "/profile", icon: User },
-    { label: t("settings"), href: "/settings", icon: Settings },
-  ];
-  const environmentNav: SidebarNavigationItemProps[] = [
-    { label: t("overview"), href: "/dashboard/overview", icon: Activity },
-    { label: t("monitoring"), href: "/dashboard/monitoring", icon: Monitor },
-    { label: t("editor"), href: "/dashboard/editor", icon: Code2 },
-    { label: t("tables"), href: "/dashboard/tables", icon: Table2 },
-    { label: t("backups"), href: "/dashboard/backups", icon: DatabaseBackup },
-    { label: t("dataMasking"), href: "/dashboard/masking", icon: ShieldCheck },
-  ];
-  const backendNav: SidebarNavigationItemProps[] = [
-    { label: t("dataApi"), href: "/dashboard/api", icon: Cloud },
-    { label: t("authentication"), href: "/dashboard/auth", icon: KeyRound },
-    { label: t("permissions"), href: "/dashboard/permissions", icon: Lock },
   ];
 
   function handleToggle() {
@@ -82,23 +52,27 @@ export function AppSidebar({ initialCollapsed }: Props) {
             <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
           ))}
           <Permission permissions={[PERMISSIONS.ROLES_READ, PERMISSIONS.USERS_READ]} match="any">
-            <SidebarNavigationItem
-              label={t("administration")}
-              href="/admin"
-              icon={Users}
-              collapsed={collapsed}
-            />
+            <>
+              <SidebarSeparator />
+              <SidebarSectionTitle title={t("administration")} collapsed={collapsed} />
+              <Permission permissions={PERMISSIONS.ROLES_READ}>
+                <SidebarNavigationItem
+                  label={t("roles")}
+                  href="/admin/roles"
+                  icon={ShieldCheck}
+                  collapsed={collapsed}
+                />
+              </Permission>
+              <Permission permissions={PERMISSIONS.USERS_READ}>
+                <SidebarNavigationItem
+                  label={t("users")}
+                  href="/admin/users"
+                  icon={Users}
+                  collapsed={collapsed}
+                />
+              </Permission>
+            </>
           </Permission>
-          <SidebarSeparator />
-          <SidebarSectionTitle title={t("environment")} collapsed={collapsed} />
-          {environmentNav.map((item) => (
-            <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
-          ))}
-          <SidebarSeparator />
-          <SidebarSectionTitle title={t("backend")} collapsed={collapsed} />
-          {backendNav.map((item) => (
-            <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
-          ))}
         </nav>
       </ScrollArea>
       <div className="border-border/50 border-t p-2">
