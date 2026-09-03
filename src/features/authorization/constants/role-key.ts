@@ -1,0 +1,3 @@
+export const ROLE_KEY_CONFLICT_ERROR = "ROLE_KEY_CONFLICT";
+export const ROLE_KEY_EMPTY_ERROR = "ROLE_KEY_EMPTY";
+export const ROLE_KEY_MAX_LENGTH = 50;

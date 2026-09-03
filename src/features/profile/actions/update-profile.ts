@@ -9,7 +9,7 @@ import { user } from "@/db/schema";
 import { auth } from "@/features/auth/server";
 import { requireAuthorizedSession, PERMISSIONS } from "@/features/authorization/server";
 import { getFieldErrors } from "@/lib/utils";
-import { createProfileSchema, type ProfileInput } from "../contracts";
+import { createProfileSchema, type ProfileInput } from "../schemas/profile-schema";
 
 const profileSchema = createProfileSchema((key) => key);
 
@@ -74,7 +74,7 @@ export async function updateProfile(data: ProfileInput) {
     revalidatePath("/profile");
 
     return { success: true, user: result, emailVerificationSent: emailChanged };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       profileUpdated,

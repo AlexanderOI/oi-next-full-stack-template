@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { updateAvatar } from "../actions/update-avatar";
-import type { ProfileUser } from "../contracts";
+import type { ProfileUser } from "../interfaces/profile-user";
 
 interface Props {
   user: ProfileUser;

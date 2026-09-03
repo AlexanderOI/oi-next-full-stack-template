@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
-import type { PermissionSection, RoleSummary } from "../contracts";
+import type { PermissionSection } from "../interfaces/permission";
+import type { RoleSummary } from "../interfaces/role-summary";
 import { RoleEditor } from "./role-editor";
 
 interface Props {

@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { replaceUserRoles } from "../actions/manage-user-roles";
-import { authorizationErrorKeys, type RoleSummary, type UserRoleSummary } from "../contracts";
+import { authorizationErrorKeys } from "../constants/authorization-error-keys";
+import type { RoleSummary } from "../interfaces/role-summary";
+import type { UserRoleSummary } from "../interfaces/user-role-summary";
 
 interface Props {
   user: UserRoleSummary;

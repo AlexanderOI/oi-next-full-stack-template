@@ -1,5 +1,5 @@
-import type { PermissionKey } from "./contracts";
-import { permissionKeys } from "./contracts";
+import { permissionKeys } from "../constants/permission-catalog";
+import type { PermissionKey } from "../interfaces/permission";
 
 const knownPermissions = new Set<string>(permissionKeys);
 

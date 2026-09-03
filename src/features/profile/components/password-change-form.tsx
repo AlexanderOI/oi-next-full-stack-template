@@ -11,7 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { changePassword } from "../actions/change-password";
-import { createPasswordChangeSchema, type PasswordChangeInput } from "../contracts";
+import {
+  createPasswordChangeSchema,
+  type PasswordChangeInput,
+} from "../schemas/password-change-schema";
 
 export function PasswordChangeForm() {
   const t = useTranslations("profile");

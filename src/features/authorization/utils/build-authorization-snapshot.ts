@@ -1,13 +1,9 @@
-import type { AuthorizationSnapshot, PermissionKey } from "./contracts";
-import { permissionKeys } from "./contracts";
+import { permissionKeys } from "../constants/permission-catalog";
+import type { AuthorizationRow } from "../interfaces/authorization-row";
+import type { AuthorizationSnapshot } from "../interfaces/authorization-snapshot";
+import type { PermissionKey } from "../interfaces/permission";
 
 const knownPermissions = new Set<string>(permissionKeys);
-
-export interface AuthorizationRow {
-  userId: string;
-  roleKey: string | null;
-  permissionKey: string | null;
-}
 
 export function buildAuthorizationSnapshot(
   userId: string,

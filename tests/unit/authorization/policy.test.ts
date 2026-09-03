@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { PERMISSIONS } from "@/features/authorization/contracts";
-import { canReplaceUserRoles, evaluatePermissions } from "@/features/authorization/policy";
+import {
+  canReplaceUserRoles,
+  evaluatePermissions,
+} from "@/features/authorization/lib/authorization-policy";
 
 describe("permission evaluation", () => {
   const granted = [PERMISSIONS.PROFILE_READ_OWN, PERMISSIONS.ROLES_READ];

@@ -4,7 +4,10 @@ import { headers } from "next/headers";
 
 import { auth } from "@/features/auth/server";
 import { requireAuthorizedSession, PERMISSIONS } from "@/features/authorization/server";
-import { createPasswordChangeSchema, type PasswordChangeInput } from "../contracts";
+import {
+  createPasswordChangeSchema,
+  type PasswordChangeInput,
+} from "../schemas/password-change-schema";
 
 const passwordChangeSchema = createPasswordChangeSchema((key) => key);
 

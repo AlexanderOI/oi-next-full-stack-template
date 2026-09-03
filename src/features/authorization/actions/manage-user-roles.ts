@@ -5,13 +5,10 @@ import { and, countDistinct, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { authorizationAudit, role, rolePermission, user, userRole } from "@/db/schema";
-import {
-  PERMISSIONS,
-  type ActionResult,
-  type UserRolesInput,
-  userRolesInputSchema,
-} from "../contracts";
-import { canReplaceUserRoles } from "../policy";
+import { PERMISSIONS } from "../constants/permissions";
+import type { ActionResult } from "../interfaces/action-result";
+import { canReplaceUserRoles } from "../lib/authorization-policy";
+import { type UserRolesInput, userRolesInputSchema } from "../schemas/user-roles-input-schema";
 import { requireAuthorizedSession } from "../server";
 
 export async function replaceUserRoles(input: UserRolesInput): Promise<ActionResult> {

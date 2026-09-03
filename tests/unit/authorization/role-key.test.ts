@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { PERMISSIONS, roleInputSchema } from "@/features/authorization/contracts";
-import { deriveRoleKey, ROLE_KEY_EMPTY_ERROR } from "@/features/authorization/role-key";
+import { ROLE_KEY_EMPTY_ERROR } from "@/features/authorization/constants/role-key";
+import { deriveRoleKey } from "@/features/authorization/utils/derive-role-key";
 
 describe("deriveRoleKey", () => {
   it.each([

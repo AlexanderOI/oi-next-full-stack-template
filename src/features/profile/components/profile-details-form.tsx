@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { FieldGroup } from "@/components/ui/field";
 
 import { updateProfile } from "../actions/update-profile";
-import { createProfileSchema, type ProfileInput, type ProfileUser } from "../contracts";
+import type { ProfileUser } from "../interfaces/profile-user";
+import { createProfileSchema, type ProfileInput } from "../schemas/profile-schema";
 
 interface Props {
   user: ProfileUser;

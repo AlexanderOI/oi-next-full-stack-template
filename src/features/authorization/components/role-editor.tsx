@@ -20,7 +20,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteRole, saveRole } from "../actions/manage-roles";
-import { authorizationErrorKeys, type PermissionKey, type RoleSummary } from "../contracts";
+import { authorizationErrorKeys } from "../constants/authorization-error-keys";
+import type { PermissionKey } from "../interfaces/permission";
+import type { RoleSummary } from "../interfaces/role-summary";
 
 interface Props {
   role?: RoleSummary;

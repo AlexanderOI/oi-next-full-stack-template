@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { role, schema, userRole } from "@/db/schema";
-import { sendLocalizedVerificationEmail } from "./verification-email-delivery";
+import { sendLocalizedVerificationEmail } from "./email/verification-email-delivery";
 
 export const auth = betterAuth({
   emailAndPassword: {

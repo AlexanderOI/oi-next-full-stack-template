@@ -2,8 +2,9 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 
-import type { AuthorizationSnapshot, PermissionKey, PermissionMatch } from "../contracts";
-import { evaluatePermissions } from "../policy";
+import type { AuthorizationSnapshot } from "../interfaces/authorization-snapshot";
+import type { PermissionKey, PermissionMatch } from "../interfaces/permission";
+import { evaluatePermissions } from "../lib/authorization-policy";
 
 const AuthorizationContext = createContext<AuthorizationSnapshot | null>(null);
 

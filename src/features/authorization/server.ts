@@ -7,15 +7,18 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/db/drizzle";
 import { permission, role, rolePermission, user, userRole } from "@/db/schema";
 import { getCurrentSession, requireSession } from "@/features/auth/server";
-import type {
-  AuthorizationSnapshot,
-  PermissionKey,
-  RoleSummary,
-  UserRoleSummary,
-} from "./contracts";
-import { localizeSystemRoles, permissionCatalog } from "./contracts";
-import { evaluatePermissions } from "./policy";
-import { buildAuthorizationSnapshot } from "./resolution";
+import { permissionCatalog, permissionKeys } from "./constants/permission-catalog";
+import { PERMISSIONS } from "./constants/permissions";
+import type { ActionResult } from "./interfaces/action-result";
+import type { AuthorizationSnapshot } from "./interfaces/authorization-snapshot";
+import type { PermissionKey } from "./interfaces/permission";
+import type { RoleSummary } from "./interfaces/role-summary";
+import type { UserRoleSummary } from "./interfaces/user-role-summary";
+import { evaluatePermissions } from "./lib/authorization-policy";
+import type { RoleInput } from "./schemas/role-input-schema";
+import type { UserRolesInput } from "./schemas/user-roles-input-schema";
+import { buildAuthorizationSnapshot } from "./utils/build-authorization-snapshot";
+import { localizeSystemRoles } from "./utils/localize-system-roles";
 
 export class AuthorizationError extends Error {
   constructor() {
@@ -141,7 +144,7 @@ export async function listUsersWithRoles(): Promise<UserRoleSummary[]> {
   return [...users.values()];
 }
 
-export { PERMISSIONS, permissionCatalog, permissionKeys } from "./contracts";
+export { PERMISSIONS, permissionCatalog, permissionKeys };
 export type {
   ActionResult,
   AuthorizationSnapshot,
@@ -150,4 +153,4 @@ export type {
   RoleSummary,
   UserRolesInput,
   UserRoleSummary,
-} from "./contracts";
+};

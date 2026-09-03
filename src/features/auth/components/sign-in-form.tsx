@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/card";
 import { Form, FormField } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signIn } from "../auth-client";
-import { createLoginSchema, type LoginInput } from "../contracts";
+import { signIn } from "../lib/auth-client";
+import { createLoginSchema, type LoginInput } from "../schemas/login-schema";
 
 export function SignInForm() {
   const router = useRouter();

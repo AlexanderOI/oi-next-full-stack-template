@@ -15,7 +15,7 @@ vi.mock("drizzle-orm", () => ({ eq: mocks.eq }));
 vi.mock("@/db/drizzle", () => ({ db: { select: mocks.select } }));
 vi.mock("@/services/email/send-email", () => ({ sendEmail: mocks.sendEmail }));
 
-import { sendLocalizedVerificationEmail } from "@/features/auth/verification-email-delivery";
+import { sendLocalizedVerificationEmail } from "@/features/auth/email/verification-email-delivery";
 
 describe("sendLocalizedVerificationEmail", () => {
   beforeEach(() => {

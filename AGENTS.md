@@ -16,6 +16,11 @@ These rules are the persistent authority for changes in this repository. Prefer 
 | `src/lib`                | Small framework-independent utilities with demonstrated cross-feature use.           |
 
 - Code MUST live with the capability that owns its behavior.
+- A feature root (`src/features/<feature>`) MUST NOT contain files other than the optional public entrypoints `client.ts`, `server.ts`, and `contracts.ts`.
+- All feature implementation files MUST live in responsibility-named subdirectories such as `components/`, `actions/`, `interfaces/`, `constants/`, `utils/`, `lib/`, or `schemas/`. Create only directories required by current behavior; speculative empty directories remain prohibited.
+- `contracts.ts` MUST be an export-only public boundary. It MUST NOT declare schemas, interfaces, types, constants, helpers, or behavior directly.
+- Each schema MUST live in its own file under `schemas/`. Types inferred from or used exclusively by that schema MAY remain in the same file.
+- Other feature-owned interfaces and type aliases MUST live under `interfaces/` and be re-exported through `contracts.ts` when they are part of the public contract.
 - `src/components` MUST NOT contain feature UI.
 - Generic buckets such as `shared`, `common`, `misc`, or speculative empty directories MUST NOT be created.
 - Names MUST describe responsibility: `ProfileDetailsForm`, `AvatarUploader`, and `AppSidebar` are good; `PageClient`, `DataComponent`, and `utils2` are bad.
@@ -48,7 +53,7 @@ export default async function ProfilePage() {
 ## Server And Client Boundaries
 
 - Client components MUST receive serializable props. They MUST NOT import types from server configuration or SDK modules.
-- Features MUST define serializable boundary types in `contracts.ts` when server data crosses into a client component.
+- Features MUST expose serializable server-to-client boundary types through `contracts.ts`; their declarations remain in the owning `interfaces/` or `schemas/` file.
 - Private infrastructure and server modules MUST import `"server-only"` where supported.
 - `"use server"` MUST be used for Server Action modules or functions, not to label exported SDK clients.
 - Secrets, database clients, SMTP transports, storage SDKs, and server auth configuration MUST NOT enter a client dependency graph.

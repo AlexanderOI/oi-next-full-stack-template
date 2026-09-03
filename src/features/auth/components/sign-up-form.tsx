@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/card";
 import { Form, FormField } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signUp } from "../auth-client";
-import { createRegisterSchema, type RegisterInput } from "../contracts";
+import { signUp } from "../lib/auth-client";
+import { createRegisterSchema, type RegisterInput } from "../schemas/register-schema";
 
 export function SignUpForm() {
   const t = useTranslations("auth.signUp");

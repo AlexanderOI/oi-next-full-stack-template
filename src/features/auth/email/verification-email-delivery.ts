@@ -7,7 +7,7 @@ import { db } from "@/db/drizzle";
 import { user as userTable } from "@/db/schema";
 import { getLocaleFromCookieHeader, resolveLocale } from "@/i18n/config";
 import { sendEmail } from "@/services/email/send-email";
-import { accountVerificationEmail, emailChangeVerificationEmail } from "./email/verification-email";
+import { accountVerificationEmail, emailChangeVerificationEmail } from "./verification-email";
 
 export async function sendLocalizedVerificationEmail(
   user: { id: string; name: string; email: string },

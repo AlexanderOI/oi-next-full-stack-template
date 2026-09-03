@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { PERMISSIONS } from "@/features/authorization/contracts";
-import { buildAuthorizationSnapshot } from "@/features/authorization/resolution";
+import { buildAuthorizationSnapshot } from "@/features/authorization/utils/build-authorization-snapshot";
 
 describe("authorization resolution", () => {
   it("deduplicates and sorts effective roles and known permissions", () => {

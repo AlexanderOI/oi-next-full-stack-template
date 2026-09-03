@@ -2,19 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { z } from "zod";
 
 import { auth } from "@/features/auth/server";
 import { requireAuthorizedSession, PERMISSIONS } from "@/features/authorization/server";
 import { uploadImage } from "@/services/storage/cloudinary/upload-image";
-
-const avatarSchema = z
-  .file()
-  .max(5 * 1024 * 1024, "Image must be smaller than 5MB")
-  .mime(
-    ["image/jpeg", "image/png", "image/webp", "image/avif"],
-    "Please select a supported image file"
-  );
+import { avatarSchema } from "../schemas/avatar-schema";
 
 export async function updateAvatar(file: File) {
   try {

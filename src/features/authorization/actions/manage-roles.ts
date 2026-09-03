@@ -6,9 +6,12 @@ import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db/drizzle";
 import { authorizationAudit, role, rolePermission, userRole } from "@/db/schema";
 import { getFieldErrors } from "@/lib/utils";
-import { type ActionResult, PERMISSIONS, type RoleInput, roleInputSchema } from "../contracts";
-import { deriveRoleKey, ROLE_KEY_CONFLICT_ERROR, ROLE_KEY_EMPTY_ERROR } from "../role-key";
+import { PERMISSIONS } from "../constants/permissions";
+import { ROLE_KEY_CONFLICT_ERROR, ROLE_KEY_EMPTY_ERROR } from "../constants/role-key";
+import type { ActionResult } from "../interfaces/action-result";
+import { roleInputSchema, type RoleInput } from "../schemas/role-input-schema";
 import { requireAuthorizedSession } from "../server";
+import { deriveRoleKey } from "../utils/derive-role-key";
 
 function isUniqueConstraintError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
