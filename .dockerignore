@@ -1,0 +1,17 @@
+.atl
+.codegraph
+.git
+.next
+node_modules
+
+.env
+.env.*
+
+coverage
+tests
+*.log
+*.tsbuildinfo
+
+AGENTS.md
+CLAUDE.md
+README.md
