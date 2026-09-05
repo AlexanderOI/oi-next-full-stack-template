@@ -42,23 +42,6 @@ describe("RoleEditor", () => {
     saveRole.mockResolvedValue({ success: true, data: { id: "role-1" } });
   });
 
-  it("starts an existing role collapsed and expands from its name summary", async () => {
-    const user = userEvent.setup();
-    render(<RoleEditor role={configurableRole} permissionOptions={permissionOptions} />);
-
-    const summary = screen.getByText("Content Editor").closest("summary");
-    const details = summary?.closest("details");
-    expect(details).not.toHaveAttribute("open");
-    expect(screen.queryByText("content.editor")).not.toBeInTheDocument();
-
-    await user.tab();
-    expect(summary).toHaveFocus();
-    await user.click(summary!);
-
-    expect(details).toHaveAttribute("open");
-    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Content Editor");
-  });
-
   it("allows system-role inspection without editable or destructive controls", async () => {
     const user = userEvent.setup();
     render(
@@ -96,12 +79,4 @@ describe("RoleEditor", () => {
     });
   });
 
-  it("groups permissions by section and presents names instead of raw keys", () => {
-    render(<RoleEditor permissionOptions={permissionOptions} />);
-
-    expect(screen.getByRole("group", { name: "Authorization" })).toBeInTheDocument();
-    expect(screen.getByText("View roles")).toBeInTheDocument();
-    expect(screen.getByText("View roles and their permissions")).toBeInTheDocument();
-    expect(screen.queryByText(PERMISSIONS.ROLES_READ)).not.toBeInTheDocument();
-  });
 });

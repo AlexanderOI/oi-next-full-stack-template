@@ -46,20 +46,24 @@ describe("sendLocalizedVerificationEmail", () => {
     );
   });
 
-  it("ignores a malformed cookie and falls through to Accept-Language", async () => {
+  it("selects the email-change template and falls back to the request locale", async () => {
     mocks.limit.mockResolvedValue([{ locale: null }]);
 
     await expect(
       sendLocalizedVerificationEmail(
         { id: "user-8", name: "Alex", email: "alex@example.com" },
-        "https://example.com/verify",
-        new Request("https://example.com/api/auth/send-verification", {
+        "https://example.com/verify-email",
+        new Request("https://example.com/api/auth/change-email", {
           headers: { cookie: "APP_LOCALE=%", "accept-language": "es" },
         })
       )
     ).resolves.toBeUndefined();
     expect(mocks.sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ subject: "Verifica tu cuenta" })
+      expect.objectContaining({
+        to: "alex@example.com",
+        subject: "Confirma tu nuevo correo electrónico",
+        html: expect.stringContaining('href="https://example.com/verify-email"'),
+      })
     );
   });
 });

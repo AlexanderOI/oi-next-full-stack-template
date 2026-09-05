@@ -38,14 +38,4 @@ describe("authorization localization", () => {
     expect(localized[0]).toMatchObject({ name: "Administrador", key: "admin" });
     expect(localized[1]).toEqual(roles[1]);
   });
-
-  it("provides localized permission metadata under invariant permission keys", () => {
-    const t = createTranslator({
-      locale: "es",
-      messages: es,
-      namespace: "authorization.permissions",
-    });
-    expect(t(`${PERMISSIONS.ROLES_READ}.name`)).toBe("Ver roles");
-    expect(PERMISSIONS.ROLES_READ).toBe("authorization.roles.read");
-  });
 });

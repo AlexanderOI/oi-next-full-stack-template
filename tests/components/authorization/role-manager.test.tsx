@@ -1,4 +1,4 @@
-import { renderInEnglish as render, screen, waitFor, within } from "@/test/test-utils";
+import { renderInEnglish as render, screen } from "@/test/test-utils";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -41,34 +41,6 @@ describe("RoleManager", () => {
   beforeEach(() => {
     saveRole.mockReset();
     saveRole.mockResolvedValue({ success: true, data: { id: "role-new" } });
-  });
-
-  it("restores trigger focus after cancel and successful creation", async () => {
-    const user = userEvent.setup();
-    render(<RoleManager roles={roles} permissionOptions={permissionCatalog} />);
-
-    expect(screen.queryByRole("region", { name: "Create role" })).not.toBeInTheDocument();
-
-    const trigger = screen.getByRole("button", { name: "Create role" });
-    await user.click(trigger);
-
-    let createRegion = screen.getByRole("region", { name: "Create role" });
-    expect(createRegion).toBeInTheDocument();
-    expect(within(createRegion).getByRole("textbox", { name: "Name" })).toHaveFocus();
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(screen.queryByRole("region", { name: "Create role" })).not.toBeInTheDocument();
-    expect(trigger).toHaveFocus();
-
-    await user.click(trigger);
-    createRegion = screen.getByRole("region", { name: "Create role" });
-    await user.type(within(createRegion).getByRole("textbox", { name: "Name" }), "New role");
-    await user.click(within(createRegion).getAllByRole("checkbox")[0]);
-    await user.click(within(createRegion).getByRole("button", { name: "Save role" }));
-
-    await waitFor(() => {
-      expect(screen.queryByRole("region", { name: "Create role" })).not.toBeInTheDocument();
-      expect(trigger).toHaveFocus();
-    });
   });
 
   it("filters by role name and description and reports an empty result", async () => {

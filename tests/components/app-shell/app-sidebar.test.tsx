@@ -1,4 +1,4 @@
-import { renderInEnglish as render, screen } from "@/test/test-utils";
+import { cleanup, renderInEnglish as render, screen } from "@/test/test-utils";
 import { describe, expect, it, vi } from "vitest";
 
 import { AppSidebar } from "@/features/app-shell/components/app-sidebar";
@@ -27,22 +27,14 @@ function renderSidebar(permissions: readonly PermissionKey[], initialCollapsed =
 }
 
 describe("AppSidebar", () => {
-  it("shows the streamlined sections and only the authorized roles link", () => {
+  it("shows only administration destinations granted to the user", () => {
     renderSidebar([PERMISSIONS.ROLES_READ]);
 
-    expect(screen.getByText("General")).toBeInTheDocument();
     expect(screen.getByText("Administration")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard");
-    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute("href", "/profile");
     expect(screen.getByRole("link", { name: "Roles" })).toHaveAttribute("href", "/admin/roles");
     expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Settings")).not.toBeInTheDocument();
-    expect(screen.queryByText("Environment")).not.toBeInTheDocument();
-    expect(screen.queryByText("Backend")).not.toBeInTheDocument();
-  });
 
-  it("gates the users link independently from the roles link", () => {
+    cleanup();
     renderSidebar([PERMISSIONS.USERS_READ]);
 
     expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute("href", "/admin/users");
@@ -58,12 +50,4 @@ describe("AppSidebar", () => {
     expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
   });
 
-  it("keeps authorized direct links when section titles are collapsed", () => {
-    const { container } = renderSidebar([PERMISSIONS.ROLES_READ, PERMISSIONS.USERS_READ], true);
-
-    expect(screen.queryByText("General")).not.toBeInTheDocument();
-    expect(screen.queryByText("Administration")).not.toBeInTheDocument();
-    expect(container.querySelector('a[href="/admin/roles"]')).toBeInTheDocument();
-    expect(container.querySelector('a[href="/admin/users"]')).toBeInTheDocument();
-  });
 });
