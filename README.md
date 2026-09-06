@@ -8,7 +8,7 @@ The template keeps route files server-first and organizes product behavior by fe
 
 | Capability             | Implemented behavior                                                                                                                      |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Authentication         | Better Auth email/password registration, required email verification, and sign-in by email or username                                    |
+| Authentication         | Better Auth email/password registration, required email verification, password recovery, and sign-in by email or username                 |
 | Profile management     | Name, username, verified email changes, password changes with other-session revocation, avatar upload, and language preference            |
 | Authorization          | Persisted multi-role RBAC, configurable roles, explicit permissions, user-role assignment, administrative safety rules, and audit records |
 | Permission enforcement | Server-side guards for routes and Server Actions, plus a serializable client authorization snapshot for conditional UI                    |
@@ -124,6 +124,7 @@ Better Auth is mounted at `src/app/api/auth/[...all]/route.ts` and configured in
 - Usernames allow lowercase letters, numbers, and periods.
 - Account verification is required, and a localized verification email is sent on registration.
 - Sign-in chooses the Better Auth email or username method from the submitted identifier.
+- Public password recovery sends a localized reset link and returns the same neutral confirmation whether or not the email exists.
 - Email changes keep the current address active until the new address is verified.
 - Password changes require the current password and revoke other sessions.
 - Authenticated application routes are guarded by the server layout; unauthenticated users are redirected to `/auth/sign-in`.
@@ -160,13 +161,13 @@ Translation catalogs live in `messages/en.json` and `messages/es.json`. next-int
 3. The browser's `Accept-Language` header
 4. `APP_DEFAULT_LOCALE`, falling back to English
 
-Changing language from the profile updates both the user record and the one-year locale cookie. Registration and email-change verification emails use the same locale rules.
+Changing language from the profile updates both the user record and the one-year locale cookie. Registration, email-change verification, and password-reset emails use the same locale rules.
 
 ### Email and image services
 
 Concrete provider adapters are server-only:
 
-- `src/services/email/send-email.ts` creates a Nodemailer SMTP transport and sends HTML verification messages from `EMAIL_FROM`. Port `465` enables a secure SMTP connection; other ports use the transport's non-secure mode.
+- `src/services/email/send-email.ts` creates a Nodemailer SMTP transport and sends HTML account messages from `EMAIL_FROM`. Port `465` enables a secure SMTP connection; other ports use the transport's non-secure mode.
 - `src/services/storage/cloudinary/` configures the Cloudinary SDK, validates files before upload, applies image transformations, and returns normalized upload metadata.
 
 Keep provider SDKs and credentials out of feature client entrypoints.
@@ -370,6 +371,5 @@ The runtime environment must include the production Better Auth URL and secret, 
 - The dashboard is intentionally a placeholder for product-specific modules.
 - There is no checked-in CI workflow; use the test, type-check, lint, and format checks above as the local merge gate and add equivalent CI before production collaboration.
 - Real PostgreSQL integration tests and browser E2E tests are not implemented yet. Add isolated database coverage and a browser runner before relying on the template for critical production flows.
-- The sign-in page links to `/auth/forgot-password`, but a password-reset route and flow are not implemented.
 - Authorization mutations write audit records, but an audit-log viewer is not implemented.
 - The Docker definition is ready for standalone production builds, but deployment orchestration, health checks, observability, backups, secret management, and provider-specific infrastructure remain the adopting team's responsibility.

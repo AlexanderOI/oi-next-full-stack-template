@@ -10,12 +10,16 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { role, schema, userRole } from "@/db/schema";
+import { sendLocalizedPasswordResetEmail } from "./email/password-reset-email-delivery";
 import { sendLocalizedVerificationEmail } from "./email/verification-email-delivery";
 
 export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    async sendResetPassword({ user, url }, request) {
+      await sendLocalizedPasswordResetEmail(user, url, request);
+    },
   },
   emailVerification: {
     sendOnSignUp: true,

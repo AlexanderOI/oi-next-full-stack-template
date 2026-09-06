@@ -1,6 +1,7 @@
 export type AuthValidationKey =
   | "identifierRequired"
   | "passwordMin"
+  | "confirmPasswordRequired"
   | "nameMin"
   | "emailInvalid"
   | "usernameMin"

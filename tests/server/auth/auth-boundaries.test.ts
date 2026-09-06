@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 interface AuthConfiguration {
-  emailAndPassword: { enabled: boolean; requireEmailVerification: boolean };
+  emailAndPassword: {
+    enabled: boolean;
+    requireEmailVerification: boolean;
+    sendResetPassword: (
+      input: { user: { id: string; name: string; email: string }; url: string; token: string },
+      request: Request
+    ) => Promise<void>;
+  };
   emailVerification: {
     sendOnSignUp: boolean;
     sendVerificationEmail: (
@@ -27,6 +34,7 @@ const mocks = vi.hoisted(() => ({
   headers: vi.fn(),
   onConflictDoNothing: vi.fn(),
   sendLocalizedVerificationEmail: vi.fn(),
+  sendLocalizedPasswordResetEmail: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
@@ -44,6 +52,9 @@ vi.mock("@/db/drizzle", () => ({
 }));
 vi.mock("@/features/auth/email/verification-email-delivery", () => ({
   sendLocalizedVerificationEmail: mocks.sendLocalizedVerificationEmail,
+}));
+vi.mock("@/features/auth/email/password-reset-email-delivery", () => ({
+  sendLocalizedPasswordResetEmail: mocks.sendLocalizedPasswordResetEmail,
 }));
 vi.mock("better-auth", () => ({
   betterAuth: mocks.betterAuth.mockImplementation((config) => {
@@ -65,6 +76,23 @@ describe("authentication server boundaries", () => {
     mocks.dbValues.mockReturnValue({ onConflictDoNothing: mocks.onConflictDoNothing });
     mocks.onConflictDoNothing.mockResolvedValue(undefined);
     mocks.sendLocalizedVerificationEmail.mockResolvedValue(undefined);
+    mocks.sendLocalizedPasswordResetEmail.mockResolvedValue(undefined);
+  });
+
+  it("delegates password-reset email delivery without handling the token itself", async () => {
+    const request = new Request("https://example.com/api/auth/request-password-reset");
+    const user = { id: "user-1", name: "Alex", email: "alex@example.com" };
+
+    await mocks.authConfig?.emailAndPassword.sendResetPassword(
+      { user, url: "https://example.com/api/auth/reset-password/secret", token: "secret" },
+      request
+    );
+
+    expect(mocks.sendLocalizedPasswordResetEmail).toHaveBeenCalledWith(
+      user,
+      "https://example.com/api/auth/reset-password/secret",
+      request
+    );
   });
 
   it("requires email verification and requests a verification message on registration", async () => {

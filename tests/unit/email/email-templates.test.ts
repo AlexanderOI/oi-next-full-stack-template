@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { accountVerificationEmail, emailChangeVerificationEmail } from "@/features/auth/contracts";
+import {
+  accountVerificationEmail,
+  emailChangeVerificationEmail,
+  passwordResetEmail,
+} from "@/features/auth/contracts";
 
 describe("email templates", () => {
   it.each([
@@ -18,6 +22,36 @@ describe("email templates", () => {
     expect(email.html).toContain(greeting);
     expect(email.html).toContain("token=a&amp;next=/dashboard");
     expect(email.html).not.toContain("Hello <Alex>");
+  });
+
+  it.each([
+    [
+      "en" as const,
+      "Reset your password",
+      "If you did not request a password reset",
+      "Hello &lt;Alex&gt;",
+    ],
+    [
+      "es" as const,
+      "Restablece tu contraseña",
+      "Si no solicitaste restablecer",
+      "Hola, &lt;Alex&gt;:",
+    ],
+  ])("renders a secure password-reset message in %s", (locale, subject, body, greeting) => {
+    const email = passwordResetEmail({
+      name: "<Alex>",
+      url: 'https://example.com/reset?token=a&next="><script>alert(1)</script>',
+      locale,
+    });
+
+    expect(email.subject).toBe(subject);
+    expect(email.html).toContain(`<html lang="${locale}">`);
+    expect(email.html).toContain(body);
+    expect(email.html).toContain(greeting);
+    expect(email.html).toContain(
+      "token=a&amp;next=&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"
+    );
+    expect(email.html).not.toContain("<script>");
   });
 
   it.each([

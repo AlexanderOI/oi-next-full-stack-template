@@ -46,9 +46,35 @@
       "verificationSent": "Account created. Check your email to verify your account before signing in.",
       "failed": "Failed to create account. Please try again."
     },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "description": "Enter your email address and we will send you a reset link.",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send reset link",
+      "pending": "Sending reset link...",
+      "success": "If an account exists for that email address, a password reset link has been sent.",
+      "serviceError": "We could not request a reset link right now. Please try again.",
+      "backToSignIn": "Back to sign in"
+    },
+    "resetPassword": {
+      "title": "Choose a new password",
+      "description": "Enter and confirm your new password.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Reset password",
+      "pending": "Resetting password...",
+      "failed": "This reset link could not be used. Request a new link and try again.",
+      "invalidTitle": "Reset link unavailable",
+      "invalidDescription": "This password reset link is missing, invalid, or expired.",
+      "requestAnother": "Request a new reset link",
+      "successTitle": "Password reset",
+      "successDescription": "Your password has been reset successfully. You can now sign in.",
+      "signIn": "Sign in"
+    },
     "validation": {
       "identifierRequired": "Email or username is required",
       "passwordMin": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Please confirm your password",
       "nameMin": "Name must be at least 2 characters",
       "emailInvalid": "Invalid email address",
       "usernameMin": "Username must be at least 3 characters",
@@ -253,6 +279,13 @@
       "heading": "Confirm your new email",
       "message": "Please verify this email address to apply it to your account.",
       "button": "Confirm new email"
+    },
+    "passwordReset": {
+      "subject": "Reset your password",
+      "heading": "Reset your password",
+      "message": "Use the secure link below to choose a new password.",
+      "button": "Reset password",
+      "ignore": "If you did not request a password reset, you can ignore this email."
     },
     "greeting": "Hello {name},",
     "ignore": "If you did not request this, you can ignore this email."

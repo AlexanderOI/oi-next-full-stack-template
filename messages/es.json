@@ -46,9 +46,35 @@
       "verificationSent": "Cuenta creada. Revisa tu correo electrónico para verificarla antes de iniciar sesión.",
       "failed": "No se pudo crear la cuenta. Inténtalo de nuevo."
     },
+    "forgotPassword": {
+      "title": "Restablece tu contraseña",
+      "description": "Introduce tu correo electrónico y te enviaremos un enlace para restablecerla.",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "submit": "Enviar enlace",
+      "pending": "Enviando enlace...",
+      "success": "Si existe una cuenta para ese correo electrónico, se ha enviado un enlace para restablecer la contraseña.",
+      "serviceError": "No se pudo solicitar un enlace en este momento. Inténtalo de nuevo.",
+      "backToSignIn": "Volver al inicio de sesión"
+    },
+    "resetPassword": {
+      "title": "Elige una nueva contraseña",
+      "description": "Introduce y confirma tu nueva contraseña.",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Restablecer contraseña",
+      "pending": "Restableciendo contraseña...",
+      "failed": "No se pudo usar este enlace. Solicita uno nuevo e inténtalo de nuevo.",
+      "invalidTitle": "Enlace no disponible",
+      "invalidDescription": "Este enlace para restablecer la contraseña no está disponible, no es válido o ha caducado.",
+      "requestAnother": "Solicitar un nuevo enlace",
+      "successTitle": "Contraseña restablecida",
+      "successDescription": "Tu contraseña se ha restablecido correctamente. Ya puedes iniciar sesión.",
+      "signIn": "Iniciar sesión"
+    },
     "validation": {
       "identifierRequired": "El correo electrónico o nombre de usuario es obligatorio",
       "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+      "confirmPasswordRequired": "Confirma tu contraseña",
       "nameMin": "El nombre debe tener al menos 2 caracteres",
       "emailInvalid": "La dirección de correo electrónico no es válida",
       "usernameMin": "El nombre de usuario debe tener al menos 3 caracteres",
@@ -258,6 +284,13 @@
       "heading": "Confirma tu nuevo correo electrónico",
       "message": "Verifica esta dirección de correo electrónico para aplicarla a tu cuenta.",
       "button": "Confirmar nuevo correo electrónico"
+    },
+    "passwordReset": {
+      "subject": "Restablece tu contraseña",
+      "heading": "Restablece tu contraseña",
+      "message": "Usa el enlace seguro que aparece a continuación para elegir una nueva contraseña.",
+      "button": "Restablecer contraseña",
+      "ignore": "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo electrónico."
     },
     "greeting": "Hola, {name}:",
     "ignore": "Si no solicitaste este cambio, puedes ignorar este correo electrónico."
