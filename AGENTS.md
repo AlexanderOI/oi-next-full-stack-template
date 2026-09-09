@@ -27,6 +27,7 @@ These rules are the persistent authority for changes in this repository. Prefer 
 
 ## Component Conventions
 
+- Any feature that needs an interactive data table MUST use the reusable implementation under `src/components/ui/data-table`. Features MUST provide their own columns, filters, data, and actions, but MUST NOT recreate the table renderer, URL-backed pagination, sorting, filtering, column visibility, or pagination controls. The lower-level `src/components/ui/table.tsx` primitive MAY be used directly only for static, non-interactive tabular content.
 - Prefer an existing `src/components/ui` primitive over hand-built semantic, form, or control HTML when the primitive genuinely matches the required semantics and behavior. Ordinary structural HTML SHOULD remain HTML, and native FormData or Server Action ownership MUST NOT be replaced with `react-hook-form`; `field.tsx` supports native form semantics, while `form.tsx` is specific to `react-hook-form`.
 - When a component file's main component has props used only in that file, define exactly one non-exported `interface Props`; do not inline the object type in the component signature or name it `<ComponentName>Props`.
 - Inside components, use intentional blank-line groups in this order when present: routing or context hooks, translation hooks, state or transition hooks, refs, derived values or memos, effects, handlers, and render or return. Keep related hooks together and do not separate tightly related statements arbitrarily.
