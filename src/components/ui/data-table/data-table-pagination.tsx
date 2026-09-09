@@ -1,6 +1,6 @@
 "use client";
 
-import type { Table } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
 import type { MouseEvent } from "react";
 
 import {
@@ -19,18 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { DataTableInstance } from "./data-table-features";
 import { getPaginationRange } from "./pagination-range";
 
-interface Props<TData> {
-  table: Table<TData>;
+interface Props<TData extends RowData> {
+  table: DataTableInstance<TData>;
   pageSizeOptions?: number[];
 }
 
-export function DataTablePagination<TData>({
+export function DataTablePagination<TData extends RowData>({
   table,
   pageSizeOptions = [10, 20, 30, 50],
 }: Props<TData>) {
-  const { pageIndex, pageSize } = table.getState().pagination;
+  const { pageIndex, pageSize } = table.state.pagination;
   const pageCount = table.getPageCount();
   const currentPage = pageIndex + 1;
   const pages = getPaginationRange(currentPage, pageCount);

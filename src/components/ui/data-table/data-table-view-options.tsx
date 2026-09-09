@@ -1,6 +1,6 @@
 "use client";
 
-import type { Table } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
 import { Columns3 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,13 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { DataTableInstance } from "./data-table-features";
 
-interface Props<TData> {
-  table: Table<TData>;
+interface Props<TData extends RowData> {
+  table: DataTableInstance<TData>;
 }
 
-export function DataTableViewOptions<TData>({ table }: Props<TData>) {
+export function DataTableViewOptions<TData extends RowData>({ table }: Props<TData>) {
   const columns = table
     .getAllColumns()
     .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide());

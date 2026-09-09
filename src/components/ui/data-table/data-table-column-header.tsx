@@ -1,6 +1,6 @@
 "use client";
 
-import type { Column } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import type { DataTableColumn } from "./data-table-features";
 
-interface Props<TData, TValue> {
-  column: Column<TData, TValue>;
+interface Props<TData extends RowData, TValue> {
+  column: DataTableColumn<TData, TValue>;
   title: string;
   className?: string;
 }
 
-export function DataTableColumnHeader<TData, TValue>({
+export function DataTableColumnHeader<TData extends RowData, TValue>({
   column,
   title,
   className,

@@ -1,31 +1,27 @@
 "use client";
 
 import {
-  type ColumnDef,
+  type ColumnVisibilityState,
   type RowData,
   type RowSelectionState,
   type Updater,
-  type VisibilityState,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+  useTable,
 } from "@tanstack/react-table";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
 
 import type { DataTableParsers } from "./data-table-search-params";
+import { dataTableFeatures, type DataTableColumnDef } from "./data-table-features";
 import { getFilterQueryUpdate, getPaginationQueryUpdate } from "./data-table-state";
 
 interface UseDataTableOptions<TData extends RowData> {
-  columns: ColumnDef<TData, unknown>[];
+  columns: DataTableColumnDef<TData>[];
   data: TData[];
   pageCount: number;
   parsers: DataTableParsers;
   enableRowSelection?: boolean;
   getRowId?: (row: TData, index: number) => string;
-  initialColumnVisibility?: VisibilityState;
+  initialColumnVisibility?: ColumnVisibilityState;
   manualFiltering?: boolean;
   manualPagination?: boolean;
   manualSorting?: boolean;
@@ -69,18 +65,13 @@ export function useDataTable<TData extends RowData>({
     void setQuery(getFilterQueryUpdate(query.filters, updater));
   }
 
-  // TanStack Table exposes mutable APIs that React Compiler intentionally skips.
-  // eslint-disable-next-line react-hooks/incompatible-library
-  return useReactTable({
+  return useTable({
+    features: dataTableFeatures,
     columns,
     data,
     pageCount,
     enableRowSelection,
     getRowId,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),
-    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
-    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
     manualFiltering,
     manualPagination,
     manualSorting,

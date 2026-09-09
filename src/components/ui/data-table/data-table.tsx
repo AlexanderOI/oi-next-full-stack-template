@@ -1,6 +1,6 @@
 "use client";
 
-import { flexRender, type Table as TanStackTable } from "@tanstack/react-table";
+import { flexRender, type RowData } from "@tanstack/react-table";
 import type { ComponentProps, ReactNode } from "react";
 
 import {
@@ -12,17 +12,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import type { DataTableInstance } from "./data-table-features";
 import { DataTablePagination } from "./data-table-pagination";
 
-interface Props<TData> extends ComponentProps<"div"> {
-  table: TanStackTable<TData>;
+interface Props<TData extends RowData> extends ComponentProps<"div"> {
+  table: DataTableInstance<TData>;
   actions?: ReactNode;
   emptyMessage?: string;
   pageSizeOptions?: number[];
   toolbar?: ReactNode;
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
   table,
   actions,
   emptyMessage = "No results.",
