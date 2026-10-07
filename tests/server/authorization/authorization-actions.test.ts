@@ -271,6 +271,15 @@ describe("authorization actions", () => {
       expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/users");
     });
 
+    it("returns unauthorized before opening a transaction when the actor is signed out", async () => {
+      mocks.requireAuthorizedSession.mockRejectedValue(new Error("Unauthorized"));
+
+      await expect(
+        replaceUserRoles({ userId: "target-1", roleIds: ["member"] })
+      ).resolves.toEqual({ success: false, code: "UNAUTHORIZED" });
+      expect(mocks.transaction).not.toHaveBeenCalled();
+    });
+
     it("returns forbidden before opening a transaction when the actor lacks permission", async () => {
       mocks.requireAuthorizedSession.mockRejectedValue(new Error("FORBIDDEN"));
 

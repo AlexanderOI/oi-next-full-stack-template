@@ -1,5 +1,6 @@
 export type AuthorizationErrorCode =
   | "VALIDATION_ERROR"
+  | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "ROLE_NOT_FOUND"
   | "SYSTEM_ROLE_MODIFY"

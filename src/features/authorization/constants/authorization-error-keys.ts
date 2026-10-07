@@ -2,6 +2,7 @@ import type { AuthorizationErrorCode } from "../interfaces/authorization-error-c
 
 export const authorizationErrorKeys: Record<AuthorizationErrorCode, string> = {
   VALIDATION_ERROR: "validation",
+  UNAUTHORIZED: "unauthorized",
   FORBIDDEN: "forbidden",
   ROLE_NOT_FOUND: "roleNotFound",
   SYSTEM_ROLE_MODIFY: "systemRoleModify",

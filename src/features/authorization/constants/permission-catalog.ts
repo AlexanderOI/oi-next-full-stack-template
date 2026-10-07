@@ -48,6 +48,16 @@ export const permissionCatalog: readonly PermissionSection[] = [
         description: "View users and their role assignments",
       },
       {
+        key: PERMISSIONS.USERS_INVITE,
+        name: "Invite users",
+        description: "Invite new users to create an account",
+      },
+      {
+        key: PERMISSIONS.USER_ACCESS_UPDATE,
+        name: "Manage user access",
+        description: "Disable and reactivate user access",
+      },
+      {
         key: PERMISSIONS.USER_ROLES_UPDATE,
         name: "Manage user roles",
         description: "Assign and revoke user roles",

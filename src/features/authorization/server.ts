@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 
 import { db } from "@/db/drizzle";
@@ -9,6 +9,7 @@ import { permission, role, rolePermission, user, userRole } from "@/db/schema";
 import { getCurrentSession, requireSession } from "@/features/auth/server";
 import { permissionCatalog, permissionKeys } from "./constants/permission-catalog";
 import { PERMISSIONS } from "./constants/permissions";
+import { listUsersWithRoles } from "./data/list-users-with-roles";
 import type { ActionResult } from "./interfaces/action-result";
 import type { AuthorizationSnapshot } from "./interfaces/authorization-snapshot";
 import type { PermissionKey } from "./interfaces/permission";
@@ -34,10 +35,11 @@ export const getAuthorizationContext = cache(async () => {
   const rows = await db
     .select({ userId: userRole.userId, roleKey: role.key, permissionKey: permission.key })
     .from(userRole)
+    .innerJoin(user, eq(userRole.userId, user.id))
     .innerJoin(role, eq(userRole.roleId, role.id))
     .leftJoin(rolePermission, eq(role.id, rolePermission.roleId))
     .leftJoin(permission, eq(rolePermission.permissionKey, permission.key))
-    .where(eq(userRole.userId, session.user.id));
+    .where(and(eq(userRole.userId, session.user.id), isNull(user.disabledAt)));
 
   return { session, snapshot: buildAuthorizationSnapshot(session.user.id, rows) };
 });
@@ -116,35 +118,13 @@ export async function getLocalizedPermissionCatalog() {
     name: t(`sections.${section.key}`),
     permissions: section.permissions.map((definition) => ({
       ...definition,
-      name: t(`permissions.${definition.key}.name`),
-      description: t(`permissions.${definition.key}.description`),
+      name: t(`permissions.${definition.key}.name` as Parameters<typeof t>[0]),
+      description: t(`permissions.${definition.key}.description` as Parameters<typeof t>[0]),
     })),
   }));
 }
 
-export async function listUsersWithRoles(): Promise<UserRoleSummary[]> {
-  const rows = await db
-    .select({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      roleId: userRole.roleId,
-    })
-    .from(user)
-    .leftJoin(userRole, eq(user.id, userRole.userId))
-    .orderBy(asc(user.name), asc(user.email));
-
-  const users = new Map<string, UserRoleSummary>();
-  for (const row of rows) {
-    const current = users.get(row.id) ?? { ...row, roleIds: [] };
-    if (row.roleId) current.roleIds = [...current.roleIds, row.roleId].sort();
-    users.set(row.id, current);
-  }
-  return [...users.values()];
-}
-
-export { PERMISSIONS, permissionCatalog, permissionKeys };
+export { listUsersWithRoles, PERMISSIONS, permissionCatalog, permissionKeys };
 export type {
   ActionResult,
   AuthorizationSnapshot,

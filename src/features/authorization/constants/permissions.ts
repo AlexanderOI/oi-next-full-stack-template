@@ -6,6 +6,8 @@ export const PERMISSIONS = {
   ROLES_UPDATE: "authorization.roles.update",
   ROLES_DELETE: "authorization.roles.delete",
   USERS_READ: "authorization.users.read",
+  USERS_INVITE: "authorization.users.invite",
+  USER_ACCESS_UPDATE: "authorization.user-access.update",
   USER_ROLES_UPDATE: "authorization.user-roles.update",
   AUDIT_READ: "authorization.audit.read",
 } as const;

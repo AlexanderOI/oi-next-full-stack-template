@@ -102,6 +102,8 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
       "ADMINISTRATIVE_ACCESS",
     ]);
     const message = error instanceof Error ? error.message : "";
+    if (message === "Unauthorized") return { success: false, code: "UNAUTHORIZED" };
+
     return {
       success: false,
       code: (safeCodes.has(message) ? message : "UPDATE_FAILED") as
