@@ -1,4 +1,5 @@
 export { accountVerificationEmail, emailChangeVerificationEmail } from "./email/verification-email";
+export { invitationEmail } from "./email/invitation-email";
 export { passwordResetEmail } from "./email/password-reset-email";
 export { createLoginSchema, type LoginInput } from "./schemas/login-schema";
 export {

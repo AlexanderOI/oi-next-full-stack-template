@@ -10,7 +10,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/config/env", () => ({ env: { APP_DEFAULT_LOCALE: "en" } }));
-vi.mock("@/db/schema", () => ({ user: { id: "user.id", locale: "user.locale" } }));
+vi.mock("@/db/schema", () => ({
+  user: { id: "user.id", locale: "user.locale", invitedAt: "user.invitedAt" },
+}));
 vi.mock("drizzle-orm", () => ({ eq: mocks.eq }));
 vi.mock("@/db/drizzle", () => ({ db: { select: mocks.select } }));
 vi.mock("@/services/email/send-email", () => ({ sendEmail: mocks.sendEmail }));
@@ -27,7 +29,7 @@ describe("sendLocalizedPasswordResetEmail", () => {
   });
 
   it("uses the persisted locale and sends the Better Auth generated URL", async () => {
-    mocks.limit.mockResolvedValue([{ locale: "es" }]);
+    mocks.limit.mockResolvedValue([{ locale: "es", invitedAt: null }]);
 
     await sendLocalizedPasswordResetEmail(
       { id: "user-9", name: "Alex", email: "alex@example.com" },
@@ -48,7 +50,7 @@ describe("sendLocalizedPasswordResetEmail", () => {
   });
 
   it("falls back safely to request locale when no persisted locale exists", async () => {
-    mocks.limit.mockResolvedValue([{ locale: null }]);
+    mocks.limit.mockResolvedValue([{ locale: null, invitedAt: null }]);
 
     await sendLocalizedPasswordResetEmail(
       { id: "user-10", name: "Alex", email: "alex@example.com" },
@@ -60,6 +62,23 @@ describe("sendLocalizedPasswordResetEmail", () => {
 
     expect(mocks.sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({ subject: "Restablece tu contraseña" })
+    );
+  });
+
+  it("sends localized invitation content when the persisted account is pending", async () => {
+    mocks.limit.mockResolvedValue([{ locale: "es", invitedAt: new Date("2026-09-29") }]);
+
+    await sendLocalizedPasswordResetEmail(
+      { id: "user-11", name: "Alex", email: "alex@example.com" },
+      "https://example.com/api/auth/reset-password/invitation-token?callbackURL=%2Fauth%2Freset-password"
+    );
+
+    expect(mocks.sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "alex@example.com",
+        subject: "Te han invitado a oi-nextjs",
+        html: expect.stringContaining("Aceptar invitación"),
+      })
     );
   });
 });

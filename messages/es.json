@@ -173,7 +173,86 @@
       "title": "Usuarios",
       "description": "Cada usuario debe conservar al menos un rol.",
       "saveAssignments": "Guardar asignaciones",
-      "updated": "Roles actualizados"
+      "updated": "Roles actualizados",
+      "empty": "No se encontraron usuarios.",
+      "table": {
+        "name": "Nombre y correo electrónico",
+        "username": "Nombre de usuario",
+        "roles": "Roles",
+        "verification": "Verificación",
+        "access": "Acceso",
+        "actions": "Acciones",
+        "usernameMissing": "Sin configurar",
+        "roleMissing": "Sin rol",
+        "columns": "Columnas",
+        "rowsPerPage": "Filas por página",
+        "goToPage": "Ir a la página {page}",
+        "sortAscending": "Orden ascendente",
+        "sortDescending": "Orden descendente",
+        "clearSorting": "Borrar orden",
+        "hideColumn": "Ocultar columna",
+        "searchLabel": "Buscar usuarios",
+        "searchPlaceholder": "Buscar por nombre, correo, nombre de usuario o rol",
+        "emptyFiltered": "Ningún usuario coincide con la búsqueda."
+      },
+      "status": {
+        "invitationPending": "Invitación pendiente",
+        "verified": "Verificado",
+        "unverified": "Sin verificar",
+        "active": "Activo",
+        "disabled": "Desactivado"
+      },
+      "actions": {
+        "label": "Acciones para {name}",
+        "none": "No hay acciones disponibles",
+        "editRoles": "Editar roles",
+        "resendInvitation": "Reenviar invitación",
+        "disable": "Desactivar usuario",
+        "reactivate": "Reactivar usuario"
+      },
+      "invitation": {
+        "open": "Invitar usuario",
+        "title": "Invitar a un usuario",
+        "description": "Envía una invitación para que el usuario elija su propia contraseña.",
+        "name": "Nombre",
+        "email": "Correo electrónico",
+        "username": "Nombre de usuario",
+        "submit": "Enviar invitación",
+        "sending": "Enviando...",
+        "sent": "Invitación enviada",
+        "resent": "Invitación reenviada"
+      },
+      "roles": {
+        "title": "Editar roles de {name}",
+        "description": "Cada usuario debe conservar al menos un rol.",
+        "save": "Guardar roles",
+        "updated": "Roles actualizados"
+      },
+      "access": {
+        "disableTitle": "¿Desactivar a {name}?",
+        "disableDescription": "Esta acción revoca inmediatamente las sesiones activas y bloquea futuros inicios de sesión.",
+        "reactivateTitle": "¿Reactivar a {name}?",
+        "reactivateDescription": "Esta acción restablece el acceso para futuros inicios de sesión sin crear una sesión.",
+        "confirmDisable": "Desactivar usuario",
+        "confirmReactivate": "Reactivar",
+        "disabled": "Usuario desactivado",
+        "reactivated": "Usuario reactivado"
+      },
+      "errors": {
+        "VALIDATION_ERROR": "Corrige los datos de la invitación.",
+        "UNAUTHORIZED": "Debes iniciar sesión para realizar esta acción.",
+        "FORBIDDEN": "No tienes permiso para realizar esta acción.",
+        "DUPLICATE_EMAIL": "Ya existe un usuario con este correo electrónico.",
+        "DUPLICATE_USERNAME": "Ya existe un usuario con este nombre de usuario.",
+        "INVITATION_NOT_PENDING": "Esta invitación ya no está pendiente.",
+        "INVITATION_DELIVERY_FAILED": "No se pudo entregar la invitación. Puedes reenviarla.",
+        "INVITATION_FAILED": "No se pudo crear la invitación.",
+        "USER_NOT_FOUND": "No se encontró el usuario.",
+        "SELF_DISABLE_FORBIDDEN": "No puedes desactivar tu propia cuenta.",
+        "LAST_ACTIVE_MANAGER": "Otro administrador activo debe conservar el acceso a la gestión de usuarios.",
+        "INVITATION_PENDING": "Las invitaciones pendientes no se pueden desactivar ni reactivar.",
+        "ACCESS_UPDATE_FAILED": "No se pudo actualizar el acceso del usuario."
+      }
     },
     "sections": { "profile": "Perfil", "authorization": "Autorización" },
     "permissions": {
@@ -202,6 +281,16 @@
           "read": {
             "name": "Ver usuarios",
             "description": "Ver los usuarios y sus asignaciones de roles"
+          },
+          "invite": {
+            "name": "Invitar usuarios",
+            "description": "Invitar a nuevos usuarios a crear una cuenta"
+          }
+        },
+        "user-access": {
+          "update": {
+            "name": "Gestionar el acceso de usuarios",
+            "description": "Desactivar y reactivar el acceso de usuarios"
           }
         },
         "user-roles": {
@@ -227,6 +316,7 @@
     },
     "errors": {
       "validation": "Corrige los campos indicados.",
+      "unauthorized": "Debes iniciar sesión para realizar esta acción.",
       "forbidden": "No tienes permiso para realizar esta acción.",
       "roleNotFound": "No se encontró el rol",
       "systemRoleModify": "Los roles del sistema no se pueden modificar",
@@ -291,6 +381,13 @@
       "message": "Usa el enlace seguro que aparece a continuación para elegir una nueva contraseña.",
       "button": "Restablecer contraseña",
       "ignore": "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo electrónico."
+    },
+    "invitation": {
+      "subject": "Te han invitado a oi-nextjs",
+      "heading": "Te han invitado a oi-nextjs",
+      "message": "Un administrador ha creado una cuenta para ti. Usa el enlace seguro que aparece a continuación para elegir tu contraseña y aceptar la invitación.",
+      "button": "Aceptar invitación",
+      "ignore": "Si no esperabas esta invitación, puedes ignorar este correo electrónico."
     },
     "greeting": "Hola, {name}:",
     "ignore": "Si no solicitaste este cambio, puedes ignorar este correo electrónico."

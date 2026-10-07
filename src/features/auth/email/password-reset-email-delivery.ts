@@ -7,6 +7,7 @@ import { db } from "@/db/drizzle";
 import { user as userTable } from "@/db/schema";
 import { getLocaleFromCookieHeader, resolveLocale } from "@/i18n/config";
 import { sendEmail } from "@/services/email/send-email";
+import { invitationEmail } from "./invitation-email";
 import { passwordResetEmail } from "./password-reset-email";
 
 export async function sendLocalizedPasswordResetEmail(
@@ -15,7 +16,7 @@ export async function sendLocalizedPasswordResetEmail(
   request?: Request
 ) {
   const [persistedUser] = await db
-    .select({ locale: userTable.locale })
+    .select({ locale: userTable.locale, invitedAt: userTable.invitedAt })
     .from(userTable)
     .where(eq(userTable.id, user.id))
     .limit(1);
@@ -26,7 +27,9 @@ export async function sendLocalizedPasswordResetEmail(
     acceptLanguage: request?.headers.get("accept-language"),
     defaultLocale: env.APP_DEFAULT_LOCALE,
   });
-  const email = passwordResetEmail({ name: user.name, url, locale });
+  const email = persistedUser?.invitedAt
+    ? invitationEmail({ name: user.name, url, locale })
+    : passwordResetEmail({ name: user.name, url, locale });
 
   await sendEmail({ to: user.email, subject: email.subject, html: email.html });
 }

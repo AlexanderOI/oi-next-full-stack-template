@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   accountVerificationEmail,
   emailChangeVerificationEmail,
+  invitationEmail,
   passwordResetEmail,
 } from "@/features/auth/contracts";
 
@@ -22,6 +23,23 @@ describe("email templates", () => {
     expect(email.html).toContain(greeting);
     expect(email.html).toContain("token=a&amp;next=/dashboard");
     expect(email.html).not.toContain("Hello <Alex>");
+  });
+
+  it.each([
+    ["en" as const, "You're invited to oi-nextjs", "Accept invitation"],
+    ["es" as const, "Te han invitado a oi-nextjs", "Aceptar invitación"],
+  ])("renders invitation acceptance content in %s", (locale, subject, button) => {
+    const email = invitationEmail({
+      name: "<Alex>",
+      url: "https://example.com/reset?token=invitation&next=/auth/reset-password",
+      locale,
+    });
+
+    expect(email.subject).toBe(subject);
+    expect(email.html).toContain(button);
+    expect(email.html).toContain(`<html lang="${locale}">`);
+    expect(email.html).toContain("&lt;Alex&gt;");
+    expect(email.html).toContain("token=invitation&amp;next=/auth/reset-password");
   });
 
   it.each([
