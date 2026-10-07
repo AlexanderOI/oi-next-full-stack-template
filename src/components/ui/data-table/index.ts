@@ -1,6 +1,7 @@
 export { DataTable } from "./data-table";
 export { DataTableColumnHeader } from "./data-table-column-header";
 export type { DataTableColumn, DataTableColumnDef, DataTableInstance } from "./data-table-features";
+export type { DataTableLabels } from "./data-table-labels";
 export { DataTablePagination } from "./data-table-pagination";
 export { createDataTableParsers } from "./data-table-search-params";
 export type { DataTableParsers } from "./data-table-search-params";

@@ -11,12 +11,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DataTableInstance } from "./data-table-features";
+import { defaultDataTableLabels, type DataTableLabels } from "./data-table-labels";
 
 interface Props<TData extends RowData> {
   table: DataTableInstance<TData>;
+  labels?: DataTableLabels;
 }
 
-export function DataTableViewOptions<TData extends RowData>({ table }: Props<TData>) {
+export function DataTableViewOptions<TData extends RowData>({
+  table,
+  labels = defaultDataTableLabels,
+}: Props<TData>) {
   const columns = table
     .getAllColumns()
     .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide());
@@ -25,12 +30,14 @@ export function DataTableViewOptions<TData extends RowData>({ table }: Props<TDa
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
         <Columns3 aria-hidden="true" />
-        Columns
+        {labels.columns}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {columns.map((column) => {
           const header = column.columnDef.header;
-          const label = typeof header === "string" ? header : column.id;
+          const label =
+            labels.columnLabels?.[column.id] ??
+            (typeof header === "string" ? header : column.id);
 
           return (
             <DropdownMenuCheckboxItem

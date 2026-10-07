@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { DataTableInstance } from "./data-table-features";
+import { defaultDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { DataTablePagination } from "./data-table-pagination";
 
 interface Props<TData extends RowData> extends ComponentProps<"div"> {
   table: DataTableInstance<TData>;
   actions?: ReactNode;
+  columnWidths?: Partial<Record<string, number>>;
   emptyMessage?: string;
+  labels?: DataTableLabels;
   pageSizeOptions?: number[];
   toolbar?: ReactNode;
 }
@@ -26,20 +29,42 @@ interface Props<TData extends RowData> extends ComponentProps<"div"> {
 export function DataTable<TData extends RowData>({
   table,
   actions,
+  columnWidths,
   emptyMessage = "No results.",
+  labels = defaultDataTableLabels,
   pageSizeOptions,
   toolbar,
   className,
   ...props
 }: Props<TData>) {
   const rows = table.getRowModel().rows;
-  const visibleColumnCount = Math.max(table.getVisibleLeafColumns().length, 1);
+  const visibleColumns = table.getVisibleLeafColumns();
+  const visibleColumnCount = Math.max(visibleColumns.length, 1);
+  const hasPercentageWidths = visibleColumns.some(
+    (column) => columnWidths?.[column.id] !== undefined
+  );
 
   return (
     <div className={cn("flex w-full flex-col gap-3", className)} {...props}>
       {toolbar}
       <div className="overflow-hidden rounded-lg border">
-        <Table>
+        <Table style={hasPercentageWidths ? { tableLayout: "fixed" } : undefined}>
+          {hasPercentageWidths && (
+            <colgroup>
+              {visibleColumns.map((column) => {
+                const percentageWidth = columnWidths?.[column.id];
+
+                return (
+                  <col
+                    key={column.id}
+                    style={
+                      percentageWidth === undefined ? undefined : { width: `${percentageWidth}%` }
+                    }
+                  />
+                );
+              })}
+            </colgroup>
+          )}
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -75,7 +100,7 @@ export function DataTable<TData extends RowData>({
         </Table>
       </div>
       <div className="flex flex-col gap-3">
-        <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} />
+        <DataTablePagination table={table} labels={labels} pageSizeOptions={pageSizeOptions} />
         {actions}
       </div>
     </div>

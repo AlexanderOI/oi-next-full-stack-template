@@ -12,16 +12,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { DataTableColumn } from "./data-table-features";
+import { defaultDataTableLabels, type DataTableLabels } from "./data-table-labels";
 
 interface Props<TData extends RowData, TValue> {
   column: DataTableColumn<TData, TValue>;
   title: string;
+  labels?: DataTableLabels;
   className?: string;
 }
 
 export function DataTableColumnHeader<TData extends RowData, TValue>({
   column,
   title,
+  labels,
   className,
 }: Props<TData, TValue>) {
   if (!column.getCanSort() && !column.getCanHide()) {
@@ -49,16 +52,16 @@ export function DataTableColumnHeader<TData extends RowData, TValue>({
           <>
             <DropdownMenuItem onClick={() => column.toggleSorting(false, false)}>
               <ArrowUp aria-hidden="true" />
-              Sort ascending
+              {labels?.sortAscending ?? defaultDataTableLabels.sortAscending}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => column.toggleSorting(true, false)}>
               <ArrowDown aria-hidden="true" />
-              Sort descending
+              {labels?.sortDescending ?? defaultDataTableLabels.sortDescending}
             </DropdownMenuItem>
             {sorting && (
               <DropdownMenuItem onClick={() => column.clearSorting()}>
                 <X aria-hidden="true" />
-                Clear sorting
+                {labels?.clearSorting ?? defaultDataTableLabels.clearSorting}
               </DropdownMenuItem>
             )}
           </>
@@ -66,7 +69,7 @@ export function DataTableColumnHeader<TData extends RowData, TValue>({
         {column.getCanHide() && (
           <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
             <EyeOff aria-hidden="true" />
-            Hide column
+            {labels?.hideColumn ?? defaultDataTableLabels.hideColumn}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

@@ -5,14 +5,17 @@ import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 import type { DataTableInstance } from "./data-table-features";
+import { defaultDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { DataTableViewOptions } from "./data-table-view-options";
 
 interface Props<TData extends RowData> extends ComponentProps<"div"> {
   table: DataTableInstance<TData>;
+  labels?: DataTableLabels;
 }
 
 export function DataTableToolbar<TData extends RowData>({
   table,
+  labels = defaultDataTableLabels,
   children,
   className,
   ...props
@@ -25,7 +28,7 @@ export function DataTableToolbar<TData extends RowData>({
       {...props}
     >
       <div className="flex flex-1 flex-wrap items-center gap-2">{children}</div>
-      <DataTableViewOptions table={table} />
+      <DataTableViewOptions table={table} labels={labels} />
     </div>
   );
 }

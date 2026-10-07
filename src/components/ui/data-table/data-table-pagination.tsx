@@ -20,15 +20,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { DataTableInstance } from "./data-table-features";
+import { defaultDataTableLabels, type DataTableLabels } from "./data-table-labels";
 import { getPaginationRange } from "./pagination-range";
 
 interface Props<TData extends RowData> {
   table: DataTableInstance<TData>;
+  labels?: DataTableLabels;
   pageSizeOptions?: number[];
 }
 
 export function DataTablePagination<TData extends RowData>({
   table,
+  labels = defaultDataTableLabels,
   pageSizeOptions = [10, 20, 30, 50],
 }: Props<TData>) {
   const { pageIndex, pageSize } = table.state.pagination;
@@ -44,12 +47,12 @@ export function DataTablePagination<TData extends RowData>({
   return (
     <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-muted-foreground">Rows per page</span>
+        <span className="text-muted-foreground">{labels.rowsPerPage}</span>
         <Select
           value={String(pageSize)}
           onValueChange={(value) => value && table.setPageSize(Number(value))}
         >
-          <SelectTrigger aria-label="Rows per page" className="w-20">
+          <SelectTrigger aria-label={labels.rowsPerPage} className="w-20">
             <SelectValue />
           </SelectTrigger>
           <SelectContent side="top">
@@ -80,7 +83,7 @@ export function DataTablePagination<TData extends RowData>({
                 <PaginationLink
                   href="#"
                   isActive={item === currentPage}
-                  aria-label={`Go to page ${item}`}
+                  aria-label={labels.goToPage(item)}
                   onClick={(event) => handleNavigation(event, item)}
                 >
                   {item}
