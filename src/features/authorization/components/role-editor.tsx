@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteRole, saveRole } from "../actions/manage-roles";
 import { authorizationErrorKeys } from "../constants/authorization-error-keys";
+import { platformPermissionKeys } from "../constants/permission-catalog";
 import type { PermissionKey } from "../interfaces/permission";
 import type { RoleSummary } from "../interfaces/role-summary";
 
@@ -108,36 +109,44 @@ export function RoleEditor({
         </Field>
         <FieldSet disabled={role?.isSystem || isPending}>
           <FieldLegend variant="label">{common("permissions")}</FieldLegend>
-          {permissionOptions.map((section) => (
-            <FieldSet key={section.name} className="gap-2">
-              <FieldLegend variant="label" className="text-muted-foreground">
-                {section.name}
-              </FieldLegend>
-              <FieldGroup className="grid gap-2 sm:grid-cols-2">
-                {section.permissions.map((option) => {
-                  const checkboxId = `permission-${role?.id ?? "new"}-${option.key}`;
+          {permissionOptions
+            .map((section) => ({
+              ...section,
+              permissions: section.permissions.filter(({ key }) =>
+                platformPermissionKeys.includes(key)
+              ),
+            }))
+            .filter(({ permissions }) => permissions.length > 0)
+            .map((section) => (
+              <FieldSet key={section.name} className="gap-2">
+                <FieldLegend variant="label" className="text-muted-foreground">
+                  {section.name}
+                </FieldLegend>
+                <FieldGroup className="grid gap-2 sm:grid-cols-2">
+                  {section.permissions.map((option) => {
+                    const checkboxId = `permission-${role?.id ?? "new"}-${option.key}`;
 
-                  return (
-                    <Field
-                      key={option.key}
-                      orientation="horizontal"
-                      className="items-start rounded-md border p-3"
-                    >
-                      <Checkbox
-                        id={checkboxId}
-                        checked={selected.includes(option.key)}
-                        onCheckedChange={(checked) => handlePermissionChange(option.key, checked)}
-                      />
-                      <FieldContent>
-                        <FieldLabel htmlFor={checkboxId}>{option.name}</FieldLabel>
-                        <FieldDescription>{option.description}</FieldDescription>
-                      </FieldContent>
-                    </Field>
-                  );
-                })}
-              </FieldGroup>
-            </FieldSet>
-          ))}
+                    return (
+                      <Field
+                        key={option.key}
+                        orientation="horizontal"
+                        className="items-start rounded-md border p-3"
+                      >
+                        <Checkbox
+                          id={checkboxId}
+                          checked={selected.includes(option.key)}
+                          onCheckedChange={(checked) => handlePermissionChange(option.key, checked)}
+                        />
+                        <FieldContent>
+                          <FieldLabel htmlFor={checkboxId}>{option.name}</FieldLabel>
+                          <FieldDescription>{option.description}</FieldDescription>
+                        </FieldContent>
+                      </Field>
+                    );
+                  })}
+                </FieldGroup>
+              </FieldSet>
+            ))}
         </FieldSet>
         {!role?.isSystem && (
           <div className="flex justify-end gap-2">

@@ -26,7 +26,10 @@ vi.mock("@/db/schema", () => ({
     permissionKey: "rolePermission.permissionKey",
   },
   user: { id: "user.id", disabledAt: "user.disabledAt" },
-  userRole: { userId: "userRole.userId", roleId: "userRole.roleId" },
+  platformRoleAssignment: {
+    userId: "platformRoleAssignment.userId",
+    roleId: "platformRoleAssignment.roleId",
+  },
 }));
 
 import { requireAuthorizedSession } from "@/features/authorization/server";

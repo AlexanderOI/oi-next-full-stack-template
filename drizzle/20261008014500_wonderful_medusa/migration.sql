@@ -1,0 +1,3 @@
+ALTER TABLE "user" ADD COLUMN "initial_active_organization_id" text;--> statement-breakpoint
+CREATE INDEX "user_initial_active_organization_id_idx" ON "user" ("initial_active_organization_id");--> statement-breakpoint
+ALTER TABLE "user" ADD CONSTRAINT "user_initial_active_organization_id_organization_id_fkey" FOREIGN KEY ("initial_active_organization_id") REFERENCES "organization"("id") ON DELETE SET NULL;

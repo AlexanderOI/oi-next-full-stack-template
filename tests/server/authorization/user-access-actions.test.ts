@@ -8,6 +8,12 @@ const mocks = vi.hoisted(() => ({
   failAuditInsert: false,
   tables: {
     authorizationAudit: { table: "authorization-audit" },
+    member: {
+      id: "member.id",
+      userId: "member.userId",
+      status: "member.status",
+      organizationId: "member.organizationId",
+    },
     permission: { table: "permission", key: "permission.key" },
     role: { table: "role", id: "role.id" },
     rolePermission: {
@@ -21,8 +27,13 @@ const mocks = vi.hoisted(() => ({
       id: "user.id",
       disabledAt: "user.disabledAt",
       invitedAt: "user.invitedAt",
+      initialActiveOrganizationId: "user.initialActiveOrganizationId",
     },
-    userRole: { table: "user-role", userId: "user-role.userId", roleId: "user-role.roleId" },
+    platformRoleAssignment: {
+      table: "platform-role-assignment",
+      userId: "platform-role-assignment.userId",
+      roleId: "platform-role-assignment.roleId",
+    },
   },
   inserted: [] as Array<{ table: unknown; values: unknown }>,
   deleted: [] as Array<{ table: unknown; condition: unknown }>,
@@ -32,6 +43,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("drizzle-orm", () => ({
   and: vi.fn((...conditions) => ({ and: conditions })),
+  or: vi.fn((...conditions) => ({ or: conditions })),
   eq: vi.fn((column, value) => ({ column, value, operator: "eq" })),
   inArray: vi.fn((column, values) => ({ column, values, operator: "in" })),
   isNull: vi.fn((column) => ({ column, operator: "is-null" })),
@@ -112,7 +124,7 @@ describe("user access action", () => {
     });
   });
 
-  it("requires access-update permission before validating or looking up malformed and unknown targets", async () => {
+  it("authorizes access updates before validating or looking up targets", async () => {
     mocks.requireAuthorizedSession.mockRejectedValue(new Error("FORBIDDEN"));
 
     await expect(updateUserAccess({ userId: "", status: "disabled" })).resolves.toEqual({
@@ -177,7 +189,7 @@ describe("user access action", () => {
     expect(mocks.deleted).toEqual([]);
   });
 
-  it("atomically disables access, deletes every target session, and audits safe metadata", async () => {
+  it("disables access, deletes sessions, and audits safe metadata atomically", async () => {
     mocks.queryResults.push(
       [{ id: "user-2", disabledAt: null, invitedAt: null }],
       [{ userId: "actor-1", permissionKey: PERMISSIONS.USER_ACCESS_UPDATE }]
@@ -253,8 +265,30 @@ describe("user access action", () => {
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
+  it("denies reactivation when no active membership or onboarding path remains", async () => {
+    mocks.queryResults.push([{ id: "user-2", disabledAt: new Date(), invitedAt: null }], []);
+
+    await expect(updateUserAccess({ userId: "user-2", status: "active" })).resolves.toEqual({
+      success: false,
+      code: "ACCESS_UPDATE_FAILED",
+    });
+    expect(mocks.updated).toEqual([]);
+    expect(mocks.deleted).toEqual([]);
+    expect(mocks.inserted).toEqual([]);
+  });
+
   it("reactivates a disabled account without creating a session", async () => {
-    mocks.queryResults.push([{ id: "user-2", disabledAt: new Date(), invitedAt: null }]);
+    mocks.queryResults.push(
+      [
+        {
+          id: "user-2",
+          disabledAt: new Date(),
+          invitedAt: null,
+          initialActiveOrganizationId: null,
+        },
+      ],
+      [{ id: "member-2" }]
+    );
 
     await expect(updateUserAccess({ userId: "user-2", status: "active" })).resolves.toEqual({
       success: true,

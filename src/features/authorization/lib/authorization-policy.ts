@@ -1,7 +1,7 @@
-import { permissionKeys } from "../constants/permission-catalog";
+import { platformPermissionKeys } from "../constants/permission-catalog";
 import type { PermissionKey } from "../interfaces/permission";
 
-const knownPermissions = new Set<string>(permissionKeys);
+const knownPermissions = new Set<string>(platformPermissionKeys);
 
 export function evaluatePermissions(
   granted: readonly PermissionKey[],

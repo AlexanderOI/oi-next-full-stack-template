@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, ne } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
-import { authorizationAudit, role, rolePermission, userRole } from "@/db/schema";
+import { authorizationAudit, platformRoleAssignment, role, rolePermission } from "@/db/schema";
 import { getFieldErrors } from "@/lib/utils";
 import { PERMISSIONS } from "../constants/permissions";
 import { ROLE_KEY_CONFLICT_ERROR, ROLE_KEY_EMPTY_ERROR } from "../constants/role-key";
@@ -36,28 +36,37 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
         const [existing] = await tx
           .select({ isSystem: role.isSystem })
           .from(role)
-          .where(eq(role.id, id))
+          .where(and(eq(role.id, id), eq(role.scope, "platform")))
           .limit(1);
         if (!existing) throw new Error("ROLE_NOT_FOUND");
         if (existing.isSystem) throw new Error("SYSTEM_ROLE_MODIFY");
 
         if (!parsed.data.permissions.includes(PERMISSIONS.ROLES_UPDATE)) {
           const [actorHasOtherManagementRole] = await tx
-            .select({ roleId: userRole.roleId })
-            .from(userRole)
-            .innerJoin(rolePermission, eq(userRole.roleId, rolePermission.roleId))
+            .select({ roleId: platformRoleAssignment.roleId })
+            .from(platformRoleAssignment)
+            .innerJoin(role, eq(platformRoleAssignment.roleId, role.id))
+            .innerJoin(rolePermission, eq(platformRoleAssignment.roleId, rolePermission.roleId))
             .where(
               and(
-                eq(userRole.userId, session.user.id),
-                ne(userRole.roleId, id),
+                eq(platformRoleAssignment.userId, session.user.id),
+                eq(role.scope, "platform"),
+                ne(platformRoleAssignment.roleId, id),
                 eq(rolePermission.permissionKey, PERMISSIONS.ROLES_UPDATE)
               )
             )
             .limit(1);
           const [actorHasTargetRole] = await tx
-            .select({ roleId: userRole.roleId })
-            .from(userRole)
-            .where(and(eq(userRole.userId, session.user.id), eq(userRole.roleId, id)))
+            .select({ roleId: platformRoleAssignment.roleId })
+            .from(platformRoleAssignment)
+            .innerJoin(role, eq(platformRoleAssignment.roleId, role.id))
+            .where(
+              and(
+                eq(platformRoleAssignment.userId, session.user.id),
+                eq(platformRoleAssignment.roleId, id),
+                eq(role.scope, "platform")
+              )
+            )
             .limit(1);
           if (actorHasTargetRole && !actorHasOtherManagementRole) {
             throw new Error("MANAGEMENT_ACCESS");
@@ -66,7 +75,7 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
         const [keyConflict] = await tx
           .select({ id: role.id })
           .from(role)
-          .where(and(eq(role.key, key), ne(role.id, id)))
+          .where(and(eq(role.key, key), eq(role.scope, "platform"), ne(role.id, id)))
           .limit(1);
         if (keyConflict) throw new Error(ROLE_KEY_CONFLICT_ERROR);
         await tx
@@ -83,11 +92,12 @@ export async function saveRole(input: RoleInput): Promise<ActionResult<{ id: str
         const [keyConflict] = await tx
           .select({ id: role.id })
           .from(role)
-          .where(eq(role.key, key))
+          .where(and(eq(role.key, key), eq(role.scope, "platform")))
           .limit(1);
         if (keyConflict) throw new Error(ROLE_KEY_CONFLICT_ERROR);
         await tx.insert(role).values({
           id,
+          scope: "platform",
           key,
           name: parsed.data.name,
           description: parsed.data.description,
@@ -146,14 +156,15 @@ export async function deleteRole(roleId: string): Promise<ActionResult> {
       const [existing] = await tx
         .select({ key: role.key, isSystem: role.isSystem })
         .from(role)
-        .where(eq(role.id, roleId))
+        .where(and(eq(role.id, roleId), eq(role.scope, "platform")))
         .limit(1);
       if (!existing) throw new Error("ROLE_NOT_FOUND");
       if (existing.isSystem) throw new Error("SYSTEM_ROLE_DELETE");
       const [assignment] = await tx
-        .select({ userId: userRole.userId })
-        .from(userRole)
-        .where(eq(userRole.roleId, roleId))
+        .select({ userId: platformRoleAssignment.userId })
+        .from(platformRoleAssignment)
+        .innerJoin(role, eq(platformRoleAssignment.roleId, role.id))
+        .where(and(eq(platformRoleAssignment.roleId, roleId), eq(role.scope, "platform")))
         .limit(1);
       if (assignment) throw new Error("ROLE_ASSIGNED");
 

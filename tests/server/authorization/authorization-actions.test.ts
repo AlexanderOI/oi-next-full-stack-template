@@ -7,14 +7,25 @@ const mocks = vi.hoisted(() => ({
   transaction: vi.fn(),
   tables: {
     authorizationAudit: { table: "authorization-audit" },
-    role: { table: "role", id: "role.id", key: "role.key", isSystem: "role.isSystem" },
+    role: {
+      table: "role",
+      id: "role.id",
+      key: "role.key",
+      scope: "role.scope",
+      isSystem: "role.isSystem",
+    },
     rolePermission: {
       table: "role-permission",
       roleId: "role-permission.roleId",
       permissionKey: "role-permission.permissionKey",
     },
     user: { table: "user", id: "user.id" },
-    userRole: { table: "user-role", userId: "user-role.userId", roleId: "user-role.roleId" },
+    platformRoleAssignment: {
+      table: "platform-role-assignment",
+      userId: "platform-role-assignment.userId",
+      roleId: "platform-role-assignment.roleId",
+      assignedByUserId: "platform-role-assignment.assignedByUserId",
+    },
   },
   inserted: [] as Array<{ table: unknown; values: unknown }>,
   deleted: [] as unknown[],
@@ -35,7 +46,7 @@ vi.mock("@/db/schema", () => ({
   role: mocks.tables.role,
   rolePermission: mocks.tables.rolePermission,
   user: mocks.tables.user,
-  userRole: mocks.tables.userRole,
+  platformRoleAssignment: mocks.tables.platformRoleAssignment,
 }));
 vi.mock("@/features/authorization/server", () => ({
   requireAuthorizedSession: mocks.requireAuthorizedSession,
@@ -114,7 +125,12 @@ describe("authorization actions", () => {
           }),
           {
             table: mocks.tables.rolePermission,
-            values: [{ roleId: result.success ? result.data?.id : "", permissionKey: PERMISSIONS.ROLES_READ }],
+            values: [
+              {
+                roleId: result.success ? result.data?.id : "",
+                permissionKey: PERMISSIONS.ROLES_READ,
+              },
+            ],
           },
           expect.objectContaining({
             table: mocks.tables.authorizationAudit,
@@ -201,18 +217,36 @@ describe("authorization actions", () => {
   });
 
   describe("user role assignment", () => {
+    it("rejects organization-scoped legacy roles before replacing assignments", async () => {
+      mocks.queryResults.push(
+        [{ id: "target-1" }],
+        [{ id: "organization-role", key: "organization.member", scope: "organization" }],
+        [{ id: "admin" }],
+        [],
+        [{ value: 1 }],
+        []
+      );
+
+      await expect(
+        replaceUserRoles({ userId: "target-1", roleIds: ["organization-role"] })
+      ).resolves.toEqual({ success: false, code: "INVALID_ROLES" });
+      expect(mocks.deleted).toEqual([]);
+      expect(mocks.inserted).toEqual([]);
+    });
+
     it("prevents removal of the final administrator without replacing assignments", async () => {
       mocks.queryResults.push(
         [{ id: "target-1" }],
-        [{ id: "member", key: "member" }],
+        [{ id: "member", key: "member", scope: "platform" }],
         [{ id: "admin" }],
         [{ userId: "target-1" }],
         [{ value: 1 }]
       );
 
-      await expect(
-        replaceUserRoles({ userId: "target-1", roleIds: ["member"] })
-      ).resolves.toEqual({ success: false, code: "ADMINISTRATIVE_ACCESS" });
+      await expect(replaceUserRoles({ userId: "target-1", roleIds: ["member"] })).resolves.toEqual({
+        success: false,
+        code: "ADMINISTRATIVE_ACCESS",
+      });
       expect(mocks.deleted).toEqual([]);
       expect(mocks.inserted).toEqual([]);
     });
@@ -220,16 +254,17 @@ describe("authorization actions", () => {
     it("prevents an administrator from removing their own management capability", async () => {
       mocks.queryResults.push(
         [{ id: "actor-1" }],
-        [{ id: "member", key: "member" }],
+        [{ id: "member", key: "member", scope: "platform" }],
         [{ id: "admin" }],
         [{ userId: "actor-1" }],
         [{ value: 2 }],
         []
       );
 
-      await expect(
-        replaceUserRoles({ userId: "actor-1", roleIds: ["member"] })
-      ).resolves.toEqual({ success: false, code: "ADMINISTRATIVE_ACCESS" });
+      await expect(replaceUserRoles({ userId: "actor-1", roleIds: ["member"] })).resolves.toEqual({
+        success: false,
+        code: "ADMINISTRATIVE_ACCESS",
+      });
       expect(mocks.deleted).toEqual([]);
     });
 
@@ -237,8 +272,8 @@ describe("authorization actions", () => {
       mocks.queryResults.push(
         [{ id: "target-1" }],
         [
-          { id: "admin", key: "admin" },
-          { id: "member", key: "member" },
+          { id: "admin", key: "admin", scope: "platform" },
+          { id: "member", key: "member", scope: "platform" },
         ],
         [{ id: "admin" }],
         [],
@@ -251,12 +286,12 @@ describe("authorization actions", () => {
       expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
         isolationLevel: "serializable",
       });
-      expect(mocks.deleted).toEqual([mocks.tables.userRole]);
+      expect(mocks.deleted).toEqual([mocks.tables.platformRoleAssignment]);
       expect(mocks.inserted).toContainEqual({
-        table: mocks.tables.userRole,
+        table: mocks.tables.platformRoleAssignment,
         values: [
-          { userId: "target-1", roleId: "admin" },
-          { userId: "target-1", roleId: "member" },
+          { userId: "target-1", roleId: "admin", assignedByUserId: "actor-1" },
+          { userId: "target-1", roleId: "member", assignedByUserId: "actor-1" },
         ],
       });
       expect(mocks.inserted).toContainEqual(
@@ -274,18 +309,20 @@ describe("authorization actions", () => {
     it("returns unauthorized before opening a transaction when the actor is signed out", async () => {
       mocks.requireAuthorizedSession.mockRejectedValue(new Error("Unauthorized"));
 
-      await expect(
-        replaceUserRoles({ userId: "target-1", roleIds: ["member"] })
-      ).resolves.toEqual({ success: false, code: "UNAUTHORIZED" });
+      await expect(replaceUserRoles({ userId: "target-1", roleIds: ["member"] })).resolves.toEqual({
+        success: false,
+        code: "UNAUTHORIZED",
+      });
       expect(mocks.transaction).not.toHaveBeenCalled();
     });
 
     it("returns forbidden before opening a transaction when the actor lacks permission", async () => {
       mocks.requireAuthorizedSession.mockRejectedValue(new Error("FORBIDDEN"));
 
-      await expect(
-        replaceUserRoles({ userId: "target-1", roleIds: ["member"] })
-      ).resolves.toEqual({ success: false, code: "FORBIDDEN" });
+      await expect(replaceUserRoles({ userId: "target-1", roleIds: ["member"] })).resolves.toEqual({
+        success: false,
+        code: "FORBIDDEN",
+      });
       expect(mocks.transaction).not.toHaveBeenCalled();
     });
   });

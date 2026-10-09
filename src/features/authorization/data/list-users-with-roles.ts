@@ -1,9 +1,9 @@
 import "server-only";
 
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
-import { user, userRole } from "@/db/schema";
+import { platformRoleAssignment, role, user } from "@/db/schema";
 import type { UserRoleSummary } from "../interfaces/user-role-summary";
 
 export async function listUsersWithRoles(): Promise<UserRoleSummary[]> {
@@ -16,10 +16,11 @@ export async function listUsersWithRoles(): Promise<UserRoleSummary[]> {
       username: user.username,
       invitedAt: user.invitedAt,
       disabledAt: user.disabledAt,
-      roleId: userRole.roleId,
+      roleId: role.id,
     })
     .from(user)
-    .leftJoin(userRole, eq(user.id, userRole.userId))
+    .leftJoin(platformRoleAssignment, eq(user.id, platformRoleAssignment.userId))
+    .leftJoin(role, and(eq(platformRoleAssignment.roleId, role.id), eq(role.scope, "platform")))
     .orderBy(asc(user.name), asc(user.email), asc(user.id));
 
   const users = new Map<string, UserRoleSummary>();

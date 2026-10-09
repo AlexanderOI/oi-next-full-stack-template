@@ -17,19 +17,25 @@ const mocks = vi.hoisted(() => ({
       invitedAt: "user.invitedAt",
       disabledAt: "user.disabledAt",
     },
-    userRole: {
-      table: "user-role",
-      userId: "user-role.userId",
-      roleId: "user-role.roleId",
+    platformRoleAssignment: {
+      table: "platform-role-assignment",
+      userId: "platform-role-assignment.userId",
+      roleId: "platform-role-assignment.roleId",
     },
+    role: { table: "role", id: "role.id", scope: "role.scope" },
   },
 }));
 
 vi.mock("drizzle-orm", () => ({
   asc: mocks.asc,
+  and: vi.fn((...conditions) => ({ and: conditions })),
   eq: vi.fn((left, right) => ({ left, right })),
 }));
-vi.mock("@/db/schema", () => ({ user: mocks.tables.user, userRole: mocks.tables.userRole }));
+vi.mock("@/db/schema", () => ({
+  user: mocks.tables.user,
+  platformRoleAssignment: mocks.tables.platformRoleAssignment,
+  role: mocks.tables.role,
+}));
 vi.mock("@/db/drizzle", () => ({ db: { select: mocks.select } }));
 
 import { listUsersWithRoles } from "@/features/authorization/data/list-users-with-roles";
@@ -39,7 +45,10 @@ describe("listUsersWithRoles", () => {
     vi.clearAllMocks();
     mocks.select.mockReturnValue({ from: mocks.from });
     mocks.from.mockReturnValue({ leftJoin: mocks.leftJoin });
-    mocks.leftJoin.mockReturnValue({ orderBy: mocks.orderBy });
+    mocks.leftJoin.mockImplementation(() => ({
+      leftJoin: mocks.leftJoin,
+      orderBy: mocks.orderBy,
+    }));
   });
 
   it("maps lifecycle state, preserves sorted role ids, and orders users deterministically", async () => {
@@ -84,6 +93,16 @@ describe("listUsersWithRoles", () => {
       { direction: "asc", column: "user.name" },
       { direction: "asc", column: "user.email" },
       { direction: "asc", column: "user.id" }
+    );
+    expect(mocks.leftJoin).toHaveBeenNthCalledWith(
+      2,
+      mocks.tables.role,
+      expect.objectContaining({
+        and: [
+          { left: "platform-role-assignment.roleId", right: "role.id" },
+          { left: "role.scope", right: "platform" },
+        ],
+      })
     );
   });
 });

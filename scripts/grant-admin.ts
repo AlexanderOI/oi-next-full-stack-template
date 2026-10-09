@@ -1,7 +1,7 @@
-import { or, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 
 import { db, dbPool } from "../src/db/drizzle";
-import { authorizationAudit, role, user, userRole } from "../src/db/schema";
+import { authorizationAudit, platformRoleAssignment, role, user } from "../src/db/schema";
 
 async function grantAdmin(identifier: string) {
   const [targetUser] = await db
@@ -14,14 +14,14 @@ async function grantAdmin(identifier: string) {
   const [adminRole] = await db
     .select({ id: role.id })
     .from(role)
-    .where(eq(role.key, "admin"))
+    .where(and(eq(role.key, "admin"), eq(role.scope, "platform")))
     .limit(1);
   if (!adminRole) throw new Error("Run db:bootstrap before granting an administrator");
 
   await db.transaction(async (tx) => {
     await tx
-      .insert(userRole)
-      .values({ userId: targetUser.id, roleId: adminRole.id })
+      .insert(platformRoleAssignment)
+      .values({ userId: targetUser.id, roleId: adminRole.id, assignedByUserId: null })
       .onConflictDoNothing();
     await tx.insert(authorizationAudit).values({
       id: crypto.randomUUID(),

@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { and, countDistinct, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
-import { authorizationAudit, role, rolePermission, user, userRole } from "@/db/schema";
+import {
+  authorizationAudit,
+  platformRoleAssignment,
+  role,
+  rolePermission,
+  user,
+} from "@/db/schema";
 import { PERMISSIONS } from "../constants/permissions";
 import type { ActionResult } from "../interfaces/action-result";
 import { canReplaceUserRoles } from "../lib/authorization-policy";
@@ -27,29 +33,40 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
         if (!target) throw new Error("USER_NOT_FOUND");
 
         const selectedRoles = await tx
-          .select({ id: role.id, key: role.key })
+          .select({ id: role.id, key: role.key, scope: role.scope })
           .from(role)
           .where(inArray(role.id, parsed.data.roleIds));
-        if (selectedRoles.length !== new Set(parsed.data.roleIds).size) {
+        if (
+          selectedRoles.length !== new Set(parsed.data.roleIds).size ||
+          selectedRoles.some((selectedRole) => selectedRole.scope !== "platform")
+        ) {
           throw new Error("INVALID_ROLES");
         }
 
         const [adminRole] = await tx
           .select({ id: role.id })
           .from(role)
-          .where(eq(role.key, "admin"))
+          .where(and(eq(role.key, "admin"), eq(role.scope, "platform")))
           .limit(1);
         if (!adminRole) throw new Error("ADMIN_MISSING");
 
         const [targetAdmin] = await tx
-          .select({ userId: userRole.userId })
-          .from(userRole)
-          .where(and(eq(userRole.userId, target.id), eq(userRole.roleId, adminRole.id)))
+          .select({ userId: platformRoleAssignment.userId })
+          .from(platformRoleAssignment)
+          .innerJoin(role, eq(platformRoleAssignment.roleId, role.id))
+          .where(
+            and(
+              eq(platformRoleAssignment.userId, target.id),
+              eq(platformRoleAssignment.roleId, adminRole.id),
+              eq(role.scope, "platform")
+            )
+          )
           .limit(1);
         const [{ value: adminCount }] = await tx
-          .select({ value: countDistinct(userRole.userId) })
-          .from(userRole)
-          .where(eq(userRole.roleId, adminRole.id));
+          .select({ value: countDistinct(platformRoleAssignment.userId) })
+          .from(platformRoleAssignment)
+          .innerJoin(role, eq(platformRoleAssignment.roleId, role.id))
+          .where(and(eq(platformRoleAssignment.roleId, adminRole.id), eq(role.scope, "platform")));
 
         const selectedRoleIds = new Set(parsed.data.roleIds);
         let actorKeepsAdministration = true;
@@ -75,10 +92,14 @@ export async function replaceUserRoles(input: UserRolesInput): Promise<ActionRes
           throw new Error("ADMINISTRATIVE_ACCESS");
         }
 
-        await tx.delete(userRole).where(eq(userRole.userId, target.id));
-        await tx
-          .insert(userRole)
-          .values(parsed.data.roleIds.map((roleId) => ({ userId: target.id, roleId })));
+        await tx.delete(platformRoleAssignment).where(eq(platformRoleAssignment.userId, target.id));
+        await tx.insert(platformRoleAssignment).values(
+          parsed.data.roleIds.map((roleId) => ({
+            userId: target.id,
+            roleId,
+            assignedByUserId: session.user.id,
+          }))
+        );
         await tx.insert(authorizationAudit).values({
           id: crypto.randomUUID(),
           actorUserId: session.user.id,

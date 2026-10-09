@@ -1,17 +1,18 @@
 "use server";
 
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/db/drizzle";
 import {
   authorizationAudit,
+  member,
   permission,
   role,
   rolePermission,
   session,
+  platformRoleAssignment,
   user,
-  userRole,
 } from "@/db/schema";
 import { PERMISSIONS } from "../constants/permissions";
 import type { PermissionKey } from "../interfaces/permission";
@@ -59,7 +60,12 @@ export async function updateUserAccess(input: UserAccessInput): Promise<UserAcce
     const outcome = await db.transaction(
       async (tx) => {
         const [target] = await tx
-          .select({ id: user.id, disabledAt: user.disabledAt, invitedAt: user.invitedAt })
+          .select({
+            id: user.id,
+            disabledAt: user.disabledAt,
+            invitedAt: user.invitedAt,
+            initialActiveOrganizationId: user.initialActiveOrganizationId,
+          })
           .from(user)
           .where(eq(user.id, parsed.data.userId))
           .limit(1);
@@ -78,14 +84,16 @@ export async function updateUserAccess(input: UserAccessInput): Promise<UserAcce
           const managementRows = await tx
             .select({ userId: user.id, permissionKey: permission.key })
             .from(user)
-            .innerJoin(userRole, eq(user.id, userRole.userId))
-            .innerJoin(role, eq(userRole.roleId, role.id))
+            .innerJoin(platformRoleAssignment, eq(user.id, platformRoleAssignment.userId))
+            .innerJoin(role, eq(platformRoleAssignment.roleId, role.id))
             .innerJoin(rolePermission, eq(role.id, rolePermission.roleId))
             .innerJoin(permission, eq(rolePermission.permissionKey, permission.key))
             .where(
               and(
                 isNull(user.disabledAt),
                 isNull(user.invitedAt),
+                eq(role.scope, "platform"),
+                eq(permission.scope, "platform"),
                 inArray(permission.key, managementPermissions)
               )
             );
@@ -99,6 +107,25 @@ export async function updateUserAccess(input: UserAccessInput): Promise<UserAcce
           await tx.update(user).set({ disabledAt: new Date() }).where(eq(user.id, target.id));
           await tx.delete(session).where(eq(session.userId, target.id));
         } else {
+          const [validPath] = await tx
+            .select({ id: member.id })
+            .from(member)
+            .where(
+              and(
+                eq(member.userId, target.id),
+                target.initialActiveOrganizationId
+                  ? or(
+                      eq(member.status, "active"),
+                      and(
+                        eq(member.organizationId, target.initialActiveOrganizationId),
+                        eq(member.status, "suspended")
+                      )
+                    )
+                  : eq(member.status, "active")
+              )
+            )
+            .limit(1);
+          if (!validPath) throw new Error("NO_VALID_REACTIVATION_PATH");
           await tx.update(user).set({ disabledAt: null }).where(eq(user.id, target.id));
         }
 

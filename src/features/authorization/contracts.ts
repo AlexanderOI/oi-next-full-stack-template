@@ -1,5 +1,9 @@
 export { authorizationErrorKeys } from "./constants/authorization-error-keys";
-export { permissionCatalog, permissionKeys } from "./constants/permission-catalog";
+export {
+  permissionCatalog,
+  permissionKeys,
+  platformPermissionKeys,
+} from "./constants/permission-catalog";
 export { PERMISSIONS } from "./constants/permissions";
 export type { ActionResult } from "./interfaces/action-result";
 export type { AuthorizationErrorCode } from "./interfaces/authorization-error-code";

@@ -18,20 +18,34 @@ interface AuthConfiguration {
     ) => Promise<void>;
   };
   databaseHooks: {
-    user: { create: { after: (user: { id: string }) => Promise<void> } };
+    user: {
+      create: {
+        after: (
+          user: { id: string; name: string; email: string; username: string },
+          context?: { request?: Request } | null
+        ) => Promise<void>;
+      };
+    };
     session: {
-      create: { before: (session: { userId: string }) => Promise<boolean | void> };
+      create: {
+        before: (session: { userId: string }) => Promise<boolean | void | { data: object }>;
+      };
     };
   };
   user: {
     additionalFields: Record<string, { type: string; required: boolean; input: boolean }>;
   };
   plugins: unknown[];
+  hooks: { before: (context: { path: string }) => Promise<unknown> };
+  disabledPaths: string[];
 }
 
 const mocks = vi.hoisted(() => ({
   authConfig: undefined as AuthConfiguration | undefined,
   betterAuth: vi.fn(),
+  createAuthMiddleware: vi.fn((handler: (context: { path: string }) => Promise<void>) => handler),
+  organization: vi.fn<(options: Record<string, unknown>) => string>(),
+  organizationOptions: undefined as Record<string, unknown> | undefined,
   dbFrom: vi.fn(),
   dbInsert: vi.fn(),
   dbLimit: vi.fn(),
@@ -43,7 +57,13 @@ const mocks = vi.hoisted(() => ({
   headers: vi.fn(),
   onConflictDoNothing: vi.fn(),
   sendLocalizedVerificationEmail: vi.fn(),
+  sendVerificationEmail: vi.fn(),
+  completePublicSignup: vi.fn(),
+  compensateFailedPublicSignup: vi.fn(),
+  compensateFailedTrustedSignup: vi.fn(),
   sendLocalizedPasswordResetEmail: vi.fn(),
+  dbDelete: vi.fn(),
+  dbDeleteWhere: vi.fn(),
   dbUpdate: vi.fn(),
   dbSet: vi.fn(),
   dbReturning: vi.fn(),
@@ -57,26 +77,69 @@ vi.mock("drizzle-orm", () => ({
 }));
 vi.mock("@better-auth/drizzle-adapter", () => ({ drizzleAdapter: vi.fn(() => "db-adapter") }));
 vi.mock("better-auth/next-js", () => ({ nextCookies: vi.fn(() => "next-cookies") }));
-vi.mock("better-auth/plugins", () => ({ username: vi.fn(() => "username-plugin") }));
+vi.mock("better-auth/plugins", () => ({
+  username: vi.fn(() => "username-plugin"),
+  organization: mocks.organization.mockImplementation((options) => {
+    mocks.organizationOptions = options;
+    return "organization-plugin";
+  }),
+}));
 vi.mock("@/db/schema", () => ({
-  role: { id: "role.id", key: "role.key" },
+  role: {
+    id: "role.id",
+    key: "role.key",
+    scope: "role.scope",
+    isProtected: "role.isProtected",
+  },
   schema: {},
-  userRole: "user-role-table",
+  platformRoleAssignment: "platform-role-assignment-table",
+  member: {
+    id: "member.id",
+    organizationId: "member.organizationId",
+    userId: "member.userId",
+    role: "member.role",
+    status: "member.status",
+  },
+  session: {
+    id: "session.id",
+    userId: "session.userId",
+    activeOrganizationId: "session.activeOrganizationId",
+  },
+  account: { userId: "account.userId" },
   user: {
     id: "user.id",
-    invitedAt: "user.invitedAt",
+    initialActiveOrganizationId: "user.initialActiveOrganizationId",
     emailVerified: "user.emailVerified",
+    invitedAt: "user.invitedAt",
     disabledAt: "user.disabledAt",
   },
 }));
 vi.mock("@/db/drizzle", () => ({
-  db: { select: mocks.dbSelect, insert: mocks.dbInsert, update: mocks.dbUpdate },
+  db: {
+    select: mocks.dbSelect,
+    insert: mocks.dbInsert,
+    update: mocks.dbUpdate,
+    delete: mocks.dbDelete,
+  },
+}));
+vi.mock("@/features/organizations/server", () => ({
+  completePublicSignup: mocks.completePublicSignup,
+  compensateFailedPublicSignup: mocks.compensateFailedPublicSignup,
+  compensateFailedTrustedSignup: mocks.compensateFailedTrustedSignup,
 }));
 vi.mock("@/features/auth/email/verification-email-delivery", () => ({
   sendLocalizedVerificationEmail: mocks.sendLocalizedVerificationEmail,
 }));
 vi.mock("@/features/auth/email/password-reset-email-delivery", () => ({
   sendLocalizedPasswordResetEmail: mocks.sendLocalizedPasswordResetEmail,
+}));
+vi.mock("better-auth/api", () => ({
+  APIError: class APIError extends Error {
+    constructor(_code: string, options: { message: string }) {
+      super(options.message);
+    }
+  },
+  createAuthMiddleware: mocks.createAuthMiddleware,
 }));
 vi.mock("better-auth", () => ({
   betterAuth: mocks.betterAuth.mockImplementation((config) => {
@@ -85,6 +148,7 @@ vi.mock("better-auth", () => ({
       api: {
         getSession: mocks.getSession,
         requestPasswordReset: mocks.requestPasswordReset,
+        sendVerificationEmail: mocks.sendVerificationEmail,
       },
       $Infer: {},
     };
@@ -96,11 +160,20 @@ import {
   requestInvitationPasswordReset,
   requireSession,
 } from "@/features/auth/server";
+import {
+  AUTH_NONRESTRICTIVE_INVITATION_LIMIT,
+  AUTH_NONRESTRICTIVE_MEMBERSHIP_LIMIT,
+  MAX_ACTIVE_MEMBERS_PER_ORGANIZATION,
+  MAX_ORGANIZATIONS_PER_USER,
+  ORGANIZATION_INVITATION_LIFETIME_DAYS,
+} from "@/features/organizations/contracts";
+import { organizationRouteGuard } from "@/features/auth/lib/organization-route-guard";
 
 describe("authentication server boundaries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.dbLimit.mockReset();
+    mocks.dbLimit.mockResolvedValue([]);
     mocks.headers.mockResolvedValue(new Headers({ cookie: "session=valid" }));
     mocks.dbSelect.mockReturnValue({ from: mocks.dbFrom });
     mocks.dbFrom.mockReturnValue({ where: mocks.dbWhere });
@@ -108,10 +181,16 @@ describe("authentication server boundaries", () => {
     mocks.dbInsert.mockReturnValue({ values: mocks.dbValues });
     mocks.dbValues.mockReturnValue({ onConflictDoNothing: mocks.onConflictDoNothing });
     mocks.dbUpdate.mockReturnValue({ set: mocks.dbSet });
+    mocks.dbDelete.mockReturnValue({ where: mocks.dbDeleteWhere });
+    mocks.dbDeleteWhere.mockResolvedValue(undefined);
     mocks.dbSet.mockReturnValue({ where: mocks.dbReturning });
     mocks.dbReturning.mockResolvedValue(undefined);
     mocks.onConflictDoNothing.mockResolvedValue(undefined);
     mocks.sendLocalizedVerificationEmail.mockResolvedValue(undefined);
+    mocks.sendVerificationEmail.mockResolvedValue({ status: true });
+    mocks.completePublicSignup.mockResolvedValue(undefined);
+    mocks.compensateFailedPublicSignup.mockResolvedValue(undefined);
+    mocks.compensateFailedTrustedSignup.mockResolvedValue(undefined);
     mocks.sendLocalizedPasswordResetEmail.mockResolvedValue(undefined);
     mocks.requestPasswordReset.mockImplementation(async ({ request }) => {
       try {
@@ -207,10 +286,10 @@ describe("authentication server boundaries", () => {
     vi.useRealTimers();
   });
 
-  it("requires email verification and requests a verification message on registration", async () => {
+  it("requires email verification but defers signup delivery until onboarding is ready", async () => {
     expect(mocks.authConfig).toMatchObject({
       emailAndPassword: { enabled: true, requireEmailVerification: true },
-      emailVerification: { sendOnSignUp: true },
+      emailVerification: { sendOnSignUp: false },
     });
 
     const request = new Request("https://example.com/api/auth/sign-up/email");
@@ -257,10 +336,31 @@ describe("authentication server boundaries", () => {
     );
   });
 
+  it("keeps signup provenance private in Better Auth's organization schema", () => {
+    expect(mocks.organizationOptions?.schema).toMatchObject({
+      organization: {
+        additionalFields: {
+          personalSignupOwnerUserId: {
+            type: "string",
+            required: false,
+            input: false,
+            returned: false,
+          },
+        },
+      },
+    });
+  });
+
   it("exposes server-controlled user lifecycle timestamps to Better Auth", () => {
     expect(mocks.authConfig?.user.additionalFields).toMatchObject({
       invitedAt: { type: "date", required: false, input: false },
       disabledAt: { type: "date", required: false, input: false },
+      initialActiveOrganizationId: {
+        type: "string",
+        required: false,
+        input: false,
+        returned: false,
+      },
     });
   });
 
@@ -270,7 +370,90 @@ describe("authentication server boundaries", () => {
     await expect(
       mocks.authConfig?.databaseHooks.session.create.before({ userId: "disabled-user" })
     ).resolves.toBe(false);
-    expect(mocks.authConfig?.plugins).toEqual(["next-cookies", "username-plugin"]);
+    expect(mocks.authConfig?.plugins).toEqual([
+      "next-cookies",
+      "username-plugin",
+      "organization-plugin",
+    ]);
+  });
+
+  it("configures Better Auth organization limits and disables stock deletion and mutation paths", async () => {
+    expect(mocks.organizationOptions).toMatchObject({
+      organizationLimit: MAX_ORGANIZATIONS_PER_USER,
+      invitationExpiresIn: ORGANIZATION_INVITATION_LIFETIME_DAYS * 24 * 60 * 60,
+      membershipLimit: AUTH_NONRESTRICTIVE_MEMBERSHIP_LIMIT,
+      invitationLimit: AUTH_NONRESTRICTIVE_INVITATION_LIMIT,
+      disableOrganizationDeletion: true,
+    });
+    expect(mocks.organizationOptions?.membershipLimit).not.toBe(
+      MAX_ACTIVE_MEMBERS_PER_ORGANIZATION
+    );
+    expect(mocks.authConfig?.hooks.before).toBe(organizationRouteGuard);
+    expect(mocks.authConfig?.disabledPaths).toEqual([
+      "/organization/accept-invitation",
+      "/organization/delete",
+    ]);
+  });
+
+  it.each([
+    "/organization/list",
+    "/organization/create",
+    "/organization/accept-invitation",
+    "/organization/delete",
+    "/organization/list-user-invitations",
+  ])("blocks Better Auth organization endpoint %s until product handlers exist", async (path) => {
+    await expect(mocks.authConfig?.hooks.before({ path })).rejects.toThrow(
+      "ORGANIZATION_ENDPOINTS_UNAVAILABLE"
+    );
+  });
+
+  it("does not block unrelated Better Auth endpoints", async () => {
+    await expect(
+      mocks.authConfig?.hooks.before({ path: "/sign-in/email" })
+    ).resolves.toBeUndefined();
+  });
+
+  it("sets the initial organization only for a verified active membership", async () => {
+    mocks.dbLimit
+      .mockResolvedValueOnce([{ disabledAt: null }])
+      .mockResolvedValueOnce([{ initialActiveOrganizationId: "org-1", emailVerified: true }])
+      .mockResolvedValueOnce([{ id: "membership-1" }]);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.session.create.before({ userId: "user-1" })
+    ).resolves.toEqual({ data: { activeOrganizationId: "org-1" } });
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
+  });
+
+  it("does not set initial context before email verification", async () => {
+    mocks.dbLimit
+      .mockResolvedValueOnce([{ disabledAt: null }])
+      .mockResolvedValueOnce([{ initialActiveOrganizationId: "org-1", emailVerified: false }]);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.session.create.before({ userId: "user-1" })
+    ).resolves.toBeUndefined();
+  });
+
+  it("does not set initial context when its membership is not active", async () => {
+    mocks.dbLimit
+      .mockResolvedValueOnce([{ disabledAt: null }])
+      .mockResolvedValueOnce([{ initialActiveOrganizationId: "org-1", emailVerified: true }])
+      .mockResolvedValueOnce([]);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.session.create.before({ userId: "user-1" })
+    ).resolves.toBeUndefined();
+  });
+
+  it("does not auto-select an organization for sessions created after the marker is absent", async () => {
+    mocks.dbLimit
+      .mockResolvedValueOnce([{ disabledAt: null }])
+      .mockResolvedValueOnce([{ initialActiveOrganizationId: null, emailVerified: true }]);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.session.create.before({ userId: "user-1" })
+    ).resolves.toBeUndefined();
   });
 
   it("leaves ordinary active session creation unchanged", async () => {
@@ -281,20 +464,220 @@ describe("authentication server boundaries", () => {
     ).resolves.toBeUndefined();
   });
 
+  it("onboards public signups before sending the verification request", async () => {
+    const request = new Request("https://example.com/api/auth/sign-up/email");
+    mocks.dbLimit.mockResolvedValueOnce([{ id: "role-member" }]);
+
+    await mocks.authConfig?.databaseHooks.user.create.after(
+      {
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        username: "alex",
+      },
+      { request }
+    );
+
+    expect(mocks.completePublicSignup).toHaveBeenCalledWith("user-1", "alex", "Alex");
+    expect(mocks.sendVerificationEmail).toHaveBeenCalledWith({
+      body: { email: "alex@example.com" },
+      request,
+    });
+    expect(mocks.completePublicSignup.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.sendVerificationEmail.mock.invocationCallOrder[0]
+    );
+  });
+
+  it("skips personal onboarding and public verification for trusted signup requests", async () => {
+    const { createTrustedInvitationRequest } =
+      await import("@/features/auth/lib/invitation-capability");
+    mocks.dbLimit.mockResolvedValueOnce([{ id: "role-member" }]);
+
+    await mocks.authConfig?.databaseHooks.user.create.after(
+      {
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        username: "alex",
+      },
+      { request: createTrustedInvitationRequest("https://example.com/api/auth/sign-up/email") }
+    );
+
+    expect(mocks.completePublicSignup).not.toHaveBeenCalled();
+    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
+    expect(mocks.dbValues).toHaveBeenCalledWith({
+      userId: "user-1",
+      roleId: "role-member",
+      assignedByUserId: null,
+    });
+  });
+
+  it("returns a safe pending outcome when verification delivery fails after onboarding", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.dbLimit.mockResolvedValueOnce([{ id: "role-member" }]);
+    mocks.sendVerificationEmail.mockRejectedValueOnce(new Error("SMTP unavailable"));
+
+    await expect(
+      mocks.authConfig?.databaseHooks.user.create.after({
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        username: "alex",
+      })
+    ).resolves.toBeUndefined();
+
+    expect(mocks.completePublicSignup).toHaveBeenCalledOnce();
+    expect(mocks.dbDelete).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it("compensates failed organization provisioning without sending verification", async () => {
+    const failure = new Error("organization provisioning failed");
+    mocks.completePublicSignup.mockRejectedValueOnce(failure);
+    mocks.dbLimit.mockResolvedValueOnce([{ id: "role-member" }]);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.user.create.after({
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        username: "alex",
+      })
+    ).rejects.toBe(failure);
+
+    expect(mocks.compensateFailedPublicSignup).toHaveBeenCalledWith("user-1");
+    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
+  });
+
   it("assigns every newly registered user to the bootstrapped member role", async () => {
     mocks.dbLimit.mockResolvedValue([{ id: "role-member" }]);
 
-    await mocks.authConfig?.databaseHooks.user.create.after({ id: "user-1" });
+    await mocks.authConfig?.databaseHooks.user.create.after({
+      id: "user-1",
+      name: "Alex",
+      email: "alex@example.com",
+      username: "alex",
+    });
 
-    expect(mocks.dbValues).toHaveBeenCalledWith({ userId: "user-1", roleId: "role-member" });
+    expect(mocks.dbWhere).toHaveBeenCalledWith({
+      and: [
+        { column: "role.key", value: "member" },
+        { column: "role.scope", value: "platform" },
+      ],
+    });
+    expect(mocks.dbValues).toHaveBeenCalledWith({
+      userId: "user-1",
+      roleId: "role-member",
+      assignedByUserId: null,
+    });
     expect(mocks.onConflictDoNothing).toHaveBeenCalledOnce();
+  });
+
+  it("compensates a public signup when platform role assignment insert fails before onboarding", async () => {
+    const failure = new Error("platform role assignment insert failed");
+    mocks.dbLimit.mockResolvedValueOnce([{ id: "role-member" }]);
+    mocks.onConflictDoNothing.mockRejectedValueOnce(failure);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.user.create.after(
+        {
+          id: "user-1",
+          name: "Alex",
+          email: "alex@example.com",
+          username: "alex",
+        },
+        { request: new Request("https://example.com/api/auth/sign-up/email") }
+      )
+    ).rejects.toBe(failure);
+
+    expect(mocks.compensateFailedPublicSignup).toHaveBeenCalledWith("user-1");
+    expect(mocks.completePublicSignup).not.toHaveBeenCalled();
+    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
+  });
+
+  it("surfaces transactional cleanup failure while retaining the setup failure", async () => {
+    const setupFailure = new Error("platform role assignment insert failed");
+    const cleanupFailure = new Error("cleanup transaction failed");
+    mocks.dbLimit.mockResolvedValueOnce([{ id: "role-member" }]);
+    mocks.onConflictDoNothing.mockRejectedValueOnce(setupFailure);
+    mocks.compensateFailedPublicSignup.mockRejectedValueOnce(cleanupFailure);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.user.create.after({
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        username: "alex",
+      })
+    ).rejects.toMatchObject({
+      name: "AggregateError",
+      errors: [setupFailure, cleanupFailure],
+      cause: setupFailure,
+    });
+    expect(mocks.dbDelete).not.toHaveBeenCalled();
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
+    expect(mocks.completePublicSignup).not.toHaveBeenCalled();
+    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
+  });
+
+  it("compensates a public signup when platform role lookup fails before onboarding", async () => {
+    const failure = new Error("platform role lookup failed");
+    mocks.dbLimit.mockRejectedValueOnce(failure);
+
+    await expect(
+      mocks.authConfig?.databaseHooks.user.create.after(
+        {
+          id: "user-1",
+          name: "Alex",
+          email: "alex@example.com",
+          username: "alex",
+        },
+        { request: new Request("https://example.com/api/auth/sign-up/email") }
+      )
+    ).rejects.toBe(failure);
+
+    expect(mocks.compensateFailedPublicSignup).toHaveBeenCalledWith("user-1");
+    expect(mocks.dbDelete).not.toHaveBeenCalled();
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
+    expect(mocks.completePublicSignup).not.toHaveBeenCalled();
+    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
+  });
+
+  it("compensates a trusted signup when platform role lookup fails", async () => {
+    const { createTrustedInvitationRequest } =
+      await import("@/features/auth/lib/invitation-capability");
+    mocks.dbLimit.mockRejectedValueOnce(new Error("platform role lookup failed"));
+
+    await expect(
+      mocks.authConfig?.databaseHooks.user.create.after(
+        {
+          id: "user-1",
+          name: "Alex",
+          email: "alex@example.com",
+          username: "alex",
+        },
+        {
+          request: createTrustedInvitationRequest("https://example.com/api/auth/sign-up/email"),
+        }
+      )
+    ).rejects.toThrow("platform role lookup failed");
+
+    expect(mocks.compensateFailedTrustedSignup).toHaveBeenCalledWith("user-1");
+    expect(mocks.dbDelete).not.toHaveBeenCalled();
+    expect(mocks.completePublicSignup).not.toHaveBeenCalled();
+    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
   });
 
   it("fails registration authorization setup when the member role is missing", async () => {
     mocks.dbLimit.mockResolvedValue([]);
 
     await expect(
-      mocks.authConfig?.databaseHooks.user.create.after({ id: "user-1" })
+      mocks.authConfig?.databaseHooks.user.create.after({
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        username: "alex",
+      })
     ).rejects.toThrow("The member role has not been bootstrapped");
     expect(mocks.dbInsert).not.toHaveBeenCalled();
   });
@@ -310,6 +693,39 @@ describe("authentication server boundaries", () => {
       query: { disableCookieCache: true },
     });
     await expect(requireSession()).rejects.toThrow("Unauthorized");
+  });
+
+  it("clears the initial organization marker only after reading its persisted matching session", async () => {
+    mocks.getSession.mockResolvedValueOnce({
+      user: { id: "user-1" },
+      session: { id: "session-1", activeOrganizationId: "org-1" },
+    });
+    mocks.dbLimit
+      .mockResolvedValueOnce([{ disabledAt: null }])
+      .mockResolvedValueOnce([{ initialActiveOrganizationId: "org-1" }])
+      .mockResolvedValueOnce([{ id: "session-1" }]);
+
+    await expect(getCurrentSession()).resolves.toMatchObject({
+      session: { activeOrganizationId: "org-1" },
+    });
+
+    expect(mocks.dbUpdate).toHaveBeenCalled();
+    expect(mocks.dbSet).toHaveBeenCalledWith({ initialActiveOrganizationId: null });
+  });
+
+  it("keeps the marker when no persisted matching session is observed", async () => {
+    mocks.getSession.mockResolvedValueOnce({
+      user: { id: "user-1" },
+      session: { id: "session-1", activeOrganizationId: "org-1" },
+    });
+    mocks.dbLimit
+      .mockResolvedValueOnce([{ disabledAt: null }])
+      .mockResolvedValueOnce([{ initialActiveOrganizationId: "org-1" }])
+      .mockResolvedValueOnce([]);
+
+    await getCurrentSession();
+
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
   });
 
   it("rejects an existing session when the current user is disabled", async () => {

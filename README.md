@@ -112,7 +112,7 @@ After the user exists, grant the system administrator role by email, username, o
 bun run auth:grant-admin <email|username|id>
 ```
 
-This command is idempotent for the role assignment and records the operation in `authorization_audit`. The user can then access `/admin/roles` and `/admin/users`.
+This command is idempotent for the platform-role assignment, records the operation in `authorization_audit`, and records no user actor because it is an emergency CLI grant. The user can then access `/admin/roles` and `/admin/users`.
 
 ## Application behavior
 
@@ -137,7 +137,9 @@ Avatar uploads accept JPEG, PNG, WebP, or AVIF files up to 5 MiB. The server upl
 
 ### Multi-role RBAC
 
-Authorization is stored in the `permission`, `role`, `role_permission`, `user_role`, and `authorization_audit` tables. A user may hold multiple roles; effective permissions are the union of those roles.
+Permission definitions, role definitions, role-permission links, and audit events are stored in `permission`, `role`, `role_permission`, and `authorization_audit`. Global/platform role grants are stored only in `platform_role_assignment`; organization roles are stored only in `membership_role` and must belong to that membership's organization. `user_role` is retired. A user may hold multiple assignments within the relevant authorization plane; effective permissions are the union of the applicable role permissions.
+
+The idempotent bootstrap creates protected platform roles and explicitly assigns the platform `member` role to identities without an existing platform assignment. The auth user-create hook also grants the platform `member` role. The initial administrator CLI writes a platform assignment; neither path creates or modifies organization membership-role assignments.
 
 The bootstrap creates these protected system roles:
 

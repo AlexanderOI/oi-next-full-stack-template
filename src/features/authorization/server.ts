@@ -5,7 +5,7 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 
 import { db } from "@/db/drizzle";
-import { permission, role, rolePermission, user, userRole } from "@/db/schema";
+import { permission, platformRoleAssignment, role, rolePermission, user } from "@/db/schema";
 import { getCurrentSession, requireSession } from "@/features/auth/server";
 import { permissionCatalog, permissionKeys } from "./constants/permission-catalog";
 import { PERMISSIONS } from "./constants/permissions";
@@ -33,13 +33,24 @@ export const getAuthorizationContext = cache(async () => {
   if (!session) return null;
 
   const rows = await db
-    .select({ userId: userRole.userId, roleKey: role.key, permissionKey: permission.key })
-    .from(userRole)
-    .innerJoin(user, eq(userRole.userId, user.id))
-    .innerJoin(role, eq(userRole.roleId, role.id))
+    .select({
+      userId: platformRoleAssignment.userId,
+      roleKey: role.key,
+      permissionKey: permission.key,
+    })
+    .from(platformRoleAssignment)
+    .innerJoin(user, eq(platformRoleAssignment.userId, user.id))
+    .innerJoin(role, eq(platformRoleAssignment.roleId, role.id))
     .leftJoin(rolePermission, eq(role.id, rolePermission.roleId))
     .leftJoin(permission, eq(rolePermission.permissionKey, permission.key))
-    .where(and(eq(userRole.userId, session.user.id), isNull(user.disabledAt)));
+    .where(
+      and(
+        eq(platformRoleAssignment.userId, session.user.id),
+        eq(role.scope, "platform"),
+        eq(permission.scope, "platform"),
+        isNull(user.disabledAt)
+      )
+    );
 
   return { session, snapshot: buildAuthorizationSnapshot(session.user.id, rows) };
 });
@@ -93,6 +104,7 @@ export async function listRoles(): Promise<RoleSummary[]> {
     })
     .from(role)
     .leftJoin(rolePermission, eq(role.id, rolePermission.roleId))
+    .where(eq(role.scope, "platform"))
     .orderBy(asc(role.isSystem), asc(role.name));
 
   const roles = new Map<string, RoleSummary>();

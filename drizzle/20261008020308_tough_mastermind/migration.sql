@@ -1,0 +1,3 @@
+ALTER TABLE "organization" ADD COLUMN "personal_signup_owner_user_id" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "organization_personal_signup_owner_user_id_idx" ON "organization" ("personal_signup_owner_user_id");--> statement-breakpoint
+ALTER TABLE "organization" ADD CONSTRAINT "organization_personal_signup_owner_user_id_user_id_fkey" FOREIGN KEY ("personal_signup_owner_user_id") REFERENCES "user"("id") ON DELETE SET NULL;
