@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   set: vi.fn(),
   updateWhere: vi.fn(),
+  returning: vi.fn(),
   dbUpdate: vi.fn(),
   eq: vi.fn((column, value) => ({ column, value })),
 }));
@@ -19,6 +20,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("drizzle-orm", () => ({
   and: vi.fn((...conditions) => ({ and: conditions })),
   eq: mocks.eq,
+  isNull: vi.fn((column) => ({ isNull: column })),
 }));
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
 vi.mock("@/db/drizzle", () => ({ db: { select: mocks.dbSelect, update: mocks.dbUpdate } }));
@@ -31,6 +33,7 @@ vi.mock("@/db/schema", () => ({
   },
   organization: { id: "organization.id", slug: "organization.slug", name: "organization.name" },
   session: {
+    table: "session",
     id: "session.id",
     userId: "session.userId",
     activeOrganizationId: "session.activeOrganizationId",
@@ -73,7 +76,8 @@ describe("organization routing and explicit context actions", () => {
     mocks.authSetActive.mockResolvedValue({ id: "org-b" });
     mocks.update.mockReturnValue({ set: mocks.set });
     mocks.set.mockReturnValue({ where: mocks.updateWhere });
-    mocks.updateWhere.mockResolvedValue({ rowCount: 1 });
+    mocks.updateWhere.mockReturnValue({ returning: mocks.returning });
+    mocks.returning.mockResolvedValue([{ id: "session-1" }]);
   });
 
   it("lists only the signed-in user's active memberships", async () => {
@@ -86,19 +90,22 @@ describe("organization routing and explicit context actions", () => {
     expect(mocks.eq).toHaveBeenCalledWith("member.status", "active");
   });
 
-  it("switches only to a revalidated active membership using the current request headers", async () => {
+  it("switches only the observed current session after validating membership", async () => {
     configureMembershipQuery([{ id: "org-b", slug: "bravo", name: "Bravo" }]);
     await expect(switchOrganization("org-b")).resolves.toEqual({
       success: true,
       href: "/org/bravo",
     });
-    expect(mocks.authSetActive).toHaveBeenCalledWith({
-      body: { organizationId: "org-b" },
-      headers: expect.any(Headers),
+    expect(mocks.dbUpdate).toHaveBeenCalledWith(expect.objectContaining({ id: "session.id" }));
+    expect(mocks.set).toHaveBeenCalledWith({ activeOrganizationId: "org-b" });
+    expect(mocks.updateWhere).toHaveBeenCalledWith({
+      and: [
+        { column: "session.id", value: "session-1" },
+        { column: "session.userId", value: "user-1" },
+        { column: "session.activeOrganizationId", value: "org-a" },
+      ],
     });
-    expect(mocks.authSetActive.mock.calls[0]?.[0].headers).toBe(
-      await mocks.headers.mock.results[0]?.value
-    );
+    expect(mocks.authSetActive).not.toHaveBeenCalled();
   });
 
   it("rejects unauthenticated callers before querying or switching", async () => {
@@ -108,7 +115,7 @@ describe("organization routing and explicit context actions", () => {
       code: "FORBIDDEN",
     });
     expect(mocks.dbSelect).not.toHaveBeenCalled();
-    expect(mocks.authSetActive).not.toHaveBeenCalled();
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
   });
 
   it("denies unauthorized targets and rechecks already-active targets without changing session state", async () => {
@@ -117,7 +124,7 @@ describe("organization routing and explicit context actions", () => {
       success: false,
       code: "FORBIDDEN",
     });
-    expect(mocks.authSetActive).not.toHaveBeenCalled();
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
 
     setSession("org-a");
     configureMembershipQuery([{ id: "org-a", slug: "alpha", name: "Alpha" }]);
@@ -125,7 +132,38 @@ describe("organization routing and explicit context actions", () => {
       success: true,
       href: "/org/alpha",
     });
-    expect(mocks.authSetActive).not.toHaveBeenCalled();
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
+  });
+
+  it("switches from a null context and refuses a concurrent session change", async () => {
+    setSession(null);
+    configureMembershipQuery([{ id: "org-b", slug: "bravo" }]);
+    await expect(switchOrganization("org-b")).resolves.toEqual({
+      success: true,
+      href: "/org/bravo",
+    });
+    expect(mocks.updateWhere).toHaveBeenCalledWith({
+      and: [
+        { column: "session.id", value: "session-1" },
+        { column: "session.userId", value: "user-1" },
+        { isNull: "session.activeOrganizationId" },
+      ],
+    });
+
+    mocks.returning.mockResolvedValue([]);
+    await expect(switchOrganization("org-b")).resolves.toEqual({
+      success: false,
+      code: "FORBIDDEN",
+    });
+  });
+
+  it("rejects invalid input without reading or changing state", async () => {
+    await expect(switchOrganization(" ")).resolves.toEqual({
+      success: false,
+      code: "VALIDATION_ERROR",
+    });
+    expect(mocks.getCurrentSession).not.toHaveBeenCalled();
+    expect(mocks.dbUpdate).not.toHaveBeenCalled();
   });
 
   it("clears stale context only when session, user, and observed organization all still match", async () => {

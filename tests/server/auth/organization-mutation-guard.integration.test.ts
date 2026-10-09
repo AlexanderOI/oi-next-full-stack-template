@@ -26,6 +26,7 @@ const auth = betterAuth({
 const blockedOrganizationRequests = [
   { method: "GET", path: "/organization/list", expectedStatus: 403 },
   { method: "POST", path: "/organization/create", expectedStatus: 403 },
+  { method: "POST", path: "/organization/set-active", expectedStatus: 403 },
   { method: "POST", path: "/organization/accept-invitation", expectedStatus: 404 },
   { method: "POST", path: "/organization/delete", expectedStatus: 404 },
   { method: "GET", path: "/organization/list-user-invitations", expectedStatus: 403 },
@@ -56,6 +57,7 @@ describe("Better Auth organization route guard dispatch integration", () => {
     const headers = new Headers();
     const directInvocations = [
       () => auth.api.listOrganizations({ headers }),
+      () => auth.api.setActiveOrganization({ headers, body: { organizationId: "organization-1" } }),
       () => auth.api.listUserInvitations({ headers }),
       () => auth.api.acceptInvitation({ headers, body: { invitationId: "invitation-1" } }),
       () => auth.api.deleteOrganization({ headers, body: { organizationId: "organization-1" } }),

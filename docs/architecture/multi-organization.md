@@ -500,7 +500,7 @@ The plugin's `organizationLimit` uses `MAX_ORGANIZATIONS_PER_USER` (100), and `i
 ### Better Auth owns
 
 - Canonical `organization`, `member`, and `invitation` model/schema integration.
-- Session `activeOrganizationId` storage and the explicit set-active-organization operation used only by the product switch action.
+- Session `activeOrganizationId` storage. The product switch action validates active membership and conditionally updates only the authenticated current session (session ID, user ID, and observed active context); it does not invoke the blocked stock set-active endpoint.
 - Compatible stock lifecycle operations such as organization creation/update, invitation creation/rejection/cancellation, and member reads, subject to product policy hooks.
 - Invitation expiry/limit options, invitation email callback, baseline lifecycle roles/access checks, and matching client types.
 

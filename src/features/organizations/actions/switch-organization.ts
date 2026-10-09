@@ -1,12 +1,11 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
-import { member, organization } from "@/db/schema";
-import { auth, getCurrentSession } from "@/features/auth/server";
+import { member, organization, session as sessionTable } from "@/db/schema";
+import { getCurrentSession } from "@/features/auth/server";
 
 const organizationIdSchema = z.string().trim().min(1);
 
@@ -38,10 +37,21 @@ export async function switchOrganization(
   if (!target) return { success: false, code: "FORBIDDEN" };
 
   if (current.session.activeOrganizationId !== target.id) {
-    await auth.api.setActiveOrganization({
-      body: { organizationId: target.id },
-      headers: await headers(),
-    });
+    const updated = await db
+      .update(sessionTable)
+      .set({ activeOrganizationId: target.id })
+      .where(
+        and(
+          eq(sessionTable.id, current.session.id),
+          eq(sessionTable.userId, current.user.id),
+          current.session.activeOrganizationId == null
+            ? isNull(sessionTable.activeOrganizationId)
+            : eq(sessionTable.activeOrganizationId, current.session.activeOrganizationId)
+        )
+      )
+      .returning({ id: sessionTable.id });
+
+    if (updated.length === 0) return { success: false, code: "FORBIDDEN" };
   }
 
   return { success: true, href: `/org/${target.slug}` };
