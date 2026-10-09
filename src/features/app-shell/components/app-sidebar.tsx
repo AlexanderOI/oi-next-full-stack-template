@@ -2,7 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { LayoutDashboard, PanelLeft, PanelLeftClose, ShieldCheck, User, Users } from "lucide-react";
+import {
+  Building2,
+  LayoutDashboard,
+  Mail,
+  PanelLeft,
+  PanelLeftClose,
+  ShieldCheck,
+  User,
+  Users,
+} from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -17,9 +26,14 @@ import {
 
 interface Props {
   initialCollapsed: boolean;
+  organizationNavigation: {
+    slug: string;
+    canReadMembers: boolean;
+    canReadInvitations: boolean;
+  } | null;
 }
 
-export function AppSidebar({ initialCollapsed }: Props) {
+export function AppSidebar({ initialCollapsed, organizationNavigation }: Props) {
   const t = useTranslations("shell");
 
   const [collapsed, setCollapsed] = useState(initialCollapsed);
@@ -51,6 +65,40 @@ export function AppSidebar({ initialCollapsed }: Props) {
           {generalNav.map((item) => (
             <SidebarNavigationItem key={item.label} {...item} collapsed={collapsed} />
           ))}
+          <SidebarSeparator />
+          <SidebarSectionTitle title={t("organizationSection")} collapsed={collapsed} />
+          <SidebarNavigationItem
+            label={t("organizations")}
+            href="/org"
+            icon={Building2}
+            collapsed={collapsed}
+          />
+          {organizationNavigation && (
+            <>
+              <SidebarNavigationItem
+                label={t("workspace")}
+                href={`/org/${organizationNavigation.slug}`}
+                icon={Building2}
+                collapsed={collapsed}
+              />
+              {organizationNavigation.canReadMembers && (
+                <SidebarNavigationItem
+                  label={t("members")}
+                  href={`/org/${organizationNavigation.slug}/members`}
+                  icon={Users}
+                  collapsed={collapsed}
+                />
+              )}
+              {organizationNavigation.canReadInvitations && (
+                <SidebarNavigationItem
+                  label={t("invitations")}
+                  href={`/org/${organizationNavigation.slug}/invitations`}
+                  icon={Mail}
+                  collapsed={collapsed}
+                />
+              )}
+            </>
+          )}
           <Permission permissions={[PERMISSIONS.ROLES_READ, PERMISSIONS.USERS_READ]} match="any">
             <>
               <SidebarSeparator />
