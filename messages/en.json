@@ -260,7 +260,12 @@
     },
     "sections": {
       "profile": "Profile",
-      "authorization": "Authorization"
+      "authorization": "Authorization",
+      "organization": "Organization",
+      "organization-members": "Organization members",
+      "organization-roles": "Organization roles",
+      "organization-invitations": "Organization invitations",
+      "organization-security": "Organization security"
     },
     "permissions": {
       "profile": {
@@ -303,6 +308,110 @@
             "description": "View authorization audit events"
           }
         }
+      },
+      "organization": {
+        "read": {
+          "name": "View organization",
+          "description": "View organization details and settings"
+        },
+        "update": {
+          "name": "Update organization",
+          "description": "Update organization details and settings"
+        },
+        "delete": {
+          "name": "Delete organization",
+          "description": "Permanently delete the organization"
+        },
+        "audit": {
+          "read": {
+            "name": "View organization audit",
+            "description": "View organization authorization audit events"
+          }
+        },
+        "ownership": {
+          "transfer": {
+            "name": "Transfer ownership",
+            "description": "Transfer organization ownership to another active member"
+          }
+        },
+        "members": {
+          "read": {
+            "name": "View members",
+            "description": "View organization members and their access"
+          },
+          "provision": {
+            "name": "Provision members",
+            "description": "Provision new identities in the organization"
+          },
+          "access": {
+            "update": {
+              "name": "Manage member access",
+              "description": "Suspend and reactivate organization memberships"
+            }
+          },
+          "remove": {
+            "name": "Remove members",
+            "description": "Remove memberships from the organization"
+          }
+        },
+        "roles": {
+          "read": {
+            "name": "View organization roles",
+            "description": "View protected and custom organization roles"
+          },
+          "create": {
+            "name": "Create organization roles",
+            "description": "Create custom organization roles"
+          },
+          "update": {
+            "name": "Update organization roles",
+            "description": "Update custom organization roles"
+          },
+          "delete": {
+            "name": "Delete organization roles",
+            "description": "Delete unassigned custom organization roles"
+          }
+        },
+        "member-roles": {
+          "update": {
+            "name": "Manage member roles",
+            "description": "Assign and revoke roles for organization memberships"
+          }
+        },
+        "invitations": {
+          "read": {
+            "name": "View invitations",
+            "description": "View organization invitations"
+          },
+          "create": {
+            "name": "Create invitations",
+            "description": "Invite members with a selected organization role"
+          },
+          "cancel": {
+            "name": "Cancel invitations",
+            "description": "Cancel pending organization invitations"
+          },
+          "resend": {
+            "name": "Resend invitations",
+            "description": "Replace and resend pending organization invitations"
+          }
+        },
+        "restrictions": {
+          "create": {
+            "name": "Create permanent restrictions",
+            "description": "Provision identities with permanent organization restrictions"
+          }
+        },
+        "allowlist-grants": {
+          "read": {
+            "name": "View allowlist grants",
+            "description": "View permanent organization exceptions for restricted identities"
+          },
+          "create": {
+            "name": "Create allowlist grants",
+            "description": "Create permanent organization exceptions for restricted identities"
+          }
+        }
       }
     },
     "systemRoles": {
@@ -336,6 +445,176 @@
       "descriptionMax": "Description must be at most 240 characters",
       "permissionRequired": "Select at least one permission",
       "roleRequired": "Each user must have at least one role"
+    }
+  },
+  "organizations": {
+    "members": {
+      "title": "Organization members",
+      "workspace": "Organization workspace",
+      "manageMembers": "Manage members",
+      "manageInvitations": "Manage invitations",
+      "dataTable": {
+        "columns": "Columns",
+        "rowsPerPage": "Rows per page",
+        "goToPage": "Go to page {page}",
+        "sortAscending": "Sort ascending",
+        "sortDescending": "Sort descending",
+        "clearSorting": "Clear sorting",
+        "hideColumn": "Hide column",
+        "columnLabels": {
+          "name": "Name",
+          "email": "Email",
+          "username": "Username",
+          "status": "Membership status",
+          "roles": "Roles",
+          "createdAt": "Joined",
+          "activation": "Activation",
+          "actions": "Actions"
+        }
+      },
+      "search": "Search members",
+      "empty": "No members found.",
+      "name": "Name",
+      "email": "Email",
+      "username": "Username",
+      "status": "Membership status",
+      "statusActive": "Active",
+      "statusSuspended": "Suspended",
+      "roles": "Roles",
+      "created": "Joined",
+      "activation": "Activation",
+      "activationPending": "Pending activation",
+      "activationComplete": "Activated",
+      "provision": "Provision member",
+      "provisionTitle": "Provision an organization member",
+      "provisionDescription": "Create a member account and send an activation link.",
+      "restricted": "Restrict this member to this organization",
+      "submit": "Provision member",
+      "pending": "Working...",
+      "provisionSuccess": "Member provisioned. An activation email was sent.",
+      "provisionFailed": "Member provisioning failed. Please try again.",
+      "deliveryFailed": "The member is pending, but activation email delivery failed. You can resend it.",
+      "resend": "Resend activation",
+      "resendSuccess": "Activation email sent.",
+      "resendFailed": "Activation could not be resent. This member may no longer be pending.",
+      "suspend": "Suspend membership",
+      "reactivate": "Reactivate membership",
+      "identityDisabled": "Identity globally disabled",
+      "identityRemainsDisabled": "Membership reactivated, but the identity remains disabled. Platform support must reactivate sign-in.",
+      "accessUpdated": "Membership access updated.",
+      "accessUpdateFailed": "Membership access could not be updated.",
+      "remove": "Remove member",
+      "removeTitle": "Remove this member?",
+      "removeDescription": "This removes the membership. If it is their final membership, their account, sessions, and authentication data will be deleted.",
+      "removeSuccess": "Member removed from this organization.",
+      "leave": "Leave organization",
+      "leaveTitle": "Leave this organization?",
+      "leaveDescription": "If this is your final membership, your account, sessions, and authentication data will be deleted.",
+      "leaveSuccess": "You left this organization.",
+      "identityDeletedFeedback": "Your final organization membership was removed and your account was deleted.",
+      "removeFailed": "The membership could not be removed. Organization continuity rules may prevent this change.",
+      "transfer": "Transfer ownership",
+      "transferTitle": "Transfer organization ownership",
+      "transferDescription": "Choose a different active member. They will become an owner, and you will retain administrator access.",
+      "transferRecipient": "New owner",
+      "transferChooseRecipient": "Choose an active member",
+      "transferConfirm": "Transfer ownership",
+      "transferSuccess": "Organization ownership transferred.",
+      "transferFailed": "Ownership could not be transferred.",
+      "searchFailed": "Could not update the member search."
+    },
+    "deletion": {
+      "sectionTitle": "Danger zone",
+      "open": "Delete organization",
+      "title": "Delete this organization?",
+      "description": "This permanently deletes {slug}, its memberships, invitations, roles, and organization data.",
+      "confirmLabel": "Type {slug} to confirm",
+      "confirm": "Permanently delete organization",
+      "working": "Deleting...",
+      "failed": "The organization could not be deleted.",
+      "cleanupPending": "The organization was deleted. Your session context is stale; reload or sign in again to continue."
+    },
+    "invitations": {
+      "title": "Organization invitations",
+      "search": "Search recipient email",
+      "filterStatus": "Filter by status",
+      "empty": "No invitations found.",
+      "email": "Recipient email",
+      "role": "Role",
+      "status": "Status",
+      "statusPending": "Pending",
+      "statusExpired": "Expired",
+      "statusAccepted": "Accepted",
+      "statusRejected": "Rejected",
+      "statusCanceled": "Canceled",
+      "expiresAt": "Expires",
+      "createdAt": "Created",
+      "resend": "Resend invitation",
+      "cancel": "Cancel invitation",
+      "create": "Invite someone",
+      "createTitle": "Create an invitation",
+      "createDescription": "Choose a recipient and the organization role they will receive.",
+      "submit": "Send invitation",
+      "working": "Working...",
+      "createSuccess": "Invitation sent.",
+      "deliveryFailed": "The invitation is pending, but email delivery failed. You can resend it.",
+      "createForbidden": "You do not have permission to create this invitation.",
+      "createFailed": "The invitation could not be created. Please try again.",
+      "resendSuccess": "A replacement invitation was sent.",
+      "cancelSuccess": "Invitation canceled.",
+      "actionFailed": "The invitation action could not be completed.",
+      "statusFilter": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "expired": "Expired",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "canceled": "Canceled"
+      },
+      "dataTable": {
+        "columns": "Columns",
+        "rowsPerPage": "Rows per page",
+        "goToPage": "Go to page {page}",
+        "sortAscending": "Sort ascending",
+        "sortDescending": "Sort descending",
+        "clearSorting": "Clear sorting",
+        "hideColumn": "Hide column",
+        "columnLabels": {
+          "email": "Email",
+          "role": "Role",
+          "status": "Status",
+          "expiresAt": "Expires",
+          "createdAt": "Created",
+          "actions": "Actions"
+        }
+      }
+    },
+    "recipientInvitation": {
+      "title": "Organization invitation",
+      "anonymousInstructions": "Sign in or create an account using the email address that received this invitation.",
+      "reopenOriginalLink": "After signing up or signing in, verify that email address, then reopen the original invitation link from your email.",
+      "verifyEmailInstructions": "Verify the email address on your account before viewing or responding to this invitation.",
+      "accountLinks": "Account access",
+      "signIn": "Sign in",
+      "signUp": "Sign up",
+      "unavailable": "This invitation is unavailable for this account.",
+      "invitedEmail": "Invitation for {email}",
+      "organization": "Organization: {organization}",
+      "role": "Role: {role}",
+      "pending": "Pending; expires {expiresAt}.",
+      "accepted": "Invitation accepted.",
+      "rejected": "Invitation rejected.",
+      "canceled": "Invitation canceled.",
+      "expired": "This invitation has expired.",
+      "accept": "Accept invitation",
+      "reject": "Decline invitation",
+      "acceptedFeedback": "Invitation accepted. Your active organization has not changed.",
+      "rejectedFeedback": "Invitation declined.",
+      "acceptFailed": "The invitation could not be accepted. It may no longer be available.",
+      "rejectFailed": "The invitation could not be declined. It may no longer be available.",
+      "switchPrompt": "Your active organization is {activeOrganization}. Switch only if you choose to.",
+      "switchOrganization": "Switch to invited organization",
+      "switchFailed": "The organization could not be selected. It may no longer be available."
     }
   },
   "errors": {

@@ -254,7 +254,15 @@
         "ACCESS_UPDATE_FAILED": "No se pudo actualizar el acceso del usuario."
       }
     },
-    "sections": { "profile": "Perfil", "authorization": "Autorización" },
+    "sections": {
+      "profile": "Perfil",
+      "authorization": "Autorización",
+      "organization": "Organización",
+      "organization-members": "Miembros de la organización",
+      "organization-roles": "Roles de la organización",
+      "organization-invitations": "Invitaciones de la organización",
+      "organization-security": "Seguridad de la organización"
+    },
     "permissions": {
       "profile": {
         "read": {
@@ -305,6 +313,110 @@
             "description": "Ver los eventos de auditoría de autorización"
           }
         }
+      },
+      "organization": {
+        "read": {
+          "name": "Ver la organización",
+          "description": "Ver los detalles y la configuración de la organización"
+        },
+        "update": {
+          "name": "Actualizar la organización",
+          "description": "Actualizar los detalles y la configuración de la organización"
+        },
+        "delete": {
+          "name": "Eliminar la organización",
+          "description": "Eliminar permanentemente la organización"
+        },
+        "audit": {
+          "read": {
+            "name": "Ver la auditoría de la organización",
+            "description": "Ver los eventos de auditoría de autorización de la organización"
+          }
+        },
+        "ownership": {
+          "transfer": {
+            "name": "Transferir la propiedad",
+            "description": "Transferir la propiedad de la organización a otro miembro activo"
+          }
+        },
+        "members": {
+          "read": {
+            "name": "Ver miembros",
+            "description": "Ver los miembros de la organización y su acceso"
+          },
+          "provision": {
+            "name": "Aprovisionar miembros",
+            "description": "Aprovisionar nuevas identidades en la organización"
+          },
+          "access": {
+            "update": {
+              "name": "Gestionar el acceso de miembros",
+              "description": "Suspender y reactivar membresías de la organización"
+            }
+          },
+          "remove": {
+            "name": "Eliminar miembros",
+            "description": "Eliminar membresías de la organización"
+          }
+        },
+        "roles": {
+          "read": {
+            "name": "Ver roles de la organización",
+            "description": "Ver roles protegidos y personalizados de la organización"
+          },
+          "create": {
+            "name": "Crear roles de la organización",
+            "description": "Crear roles personalizados de la organización"
+          },
+          "update": {
+            "name": "Actualizar roles de la organización",
+            "description": "Actualizar roles personalizados de la organización"
+          },
+          "delete": {
+            "name": "Eliminar roles de la organización",
+            "description": "Eliminar roles personalizados sin asignaciones"
+          }
+        },
+        "member-roles": {
+          "update": {
+            "name": "Gestionar roles de miembros",
+            "description": "Asignar y revocar roles para membresías de la organización"
+          }
+        },
+        "invitations": {
+          "read": {
+            "name": "Ver invitaciones",
+            "description": "Ver las invitaciones de la organización"
+          },
+          "create": {
+            "name": "Crear invitaciones",
+            "description": "Invitar miembros con un rol de organización seleccionado"
+          },
+          "cancel": {
+            "name": "Cancelar invitaciones",
+            "description": "Cancelar invitaciones pendientes de la organización"
+          },
+          "resend": {
+            "name": "Reenviar invitaciones",
+            "description": "Reemplazar y reenviar invitaciones pendientes de la organización"
+          }
+        },
+        "restrictions": {
+          "create": {
+            "name": "Crear restricciones permanentes",
+            "description": "Aprovisionar identidades con restricciones permanentes de organización"
+          }
+        },
+        "allowlist-grants": {
+          "read": {
+            "name": "Ver excepciones de lista de permitidos",
+            "description": "Ver excepciones permanentes de organización para identidades restringidas"
+          },
+          "create": {
+            "name": "Crear excepciones de lista de permitidos",
+            "description": "Crear excepciones permanentes de organización para identidades restringidas"
+          }
+        }
       }
     },
     "systemRoles": {
@@ -341,6 +453,176 @@
       "descriptionMax": "La descripción debe tener como máximo 240 caracteres",
       "permissionRequired": "Selecciona al menos un permiso",
       "roleRequired": "Cada usuario debe tener al menos un rol"
+    }
+  },
+  "organizations": {
+    "members": {
+      "title": "Miembros de la organización",
+      "workspace": "Espacio de trabajo de la organización",
+      "manageMembers": "Administrar miembros",
+      "manageInvitations": "Administrar invitaciones",
+      "dataTable": {
+        "columns": "Columnas",
+        "rowsPerPage": "Filas por página",
+        "goToPage": "Ir a la página {page}",
+        "sortAscending": "Orden ascendente",
+        "sortDescending": "Orden descendente",
+        "clearSorting": "Quitar orden",
+        "hideColumn": "Ocultar columna",
+        "columnLabels": {
+          "name": "Nombre",
+          "email": "Correo electrónico",
+          "username": "Nombre de usuario",
+          "status": "Estado de membresía",
+          "roles": "Roles",
+          "createdAt": "Se unió",
+          "activation": "Activación",
+          "actions": "Acciones"
+        }
+      },
+      "search": "Buscar miembros",
+      "empty": "No se encontraron miembros.",
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "username": "Nombre de usuario",
+      "status": "Estado de membresía",
+      "statusActive": "Activo",
+      "statusSuspended": "Suspendido",
+      "roles": "Roles",
+      "created": "Se unió",
+      "activation": "Activación",
+      "activationPending": "Activación pendiente",
+      "activationComplete": "Activado",
+      "provision": "Provisionar miembro",
+      "provisionTitle": "Provisionar un miembro de la organización",
+      "provisionDescription": "Crea una cuenta de miembro y envía un enlace de activación.",
+      "restricted": "Restringir este miembro a esta organización",
+      "submit": "Provisionar miembro",
+      "pending": "Procesando...",
+      "provisionSuccess": "Miembro creado. Se envió un correo de activación.",
+      "provisionFailed": "No se pudo crear el miembro. Inténtalo de nuevo.",
+      "deliveryFailed": "El miembro está pendiente, pero no se pudo enviar el correo de activación. Puedes reenviarlo.",
+      "resend": "Reenviar activación",
+      "resendSuccess": "Correo de activación enviado.",
+      "resendFailed": "No se pudo reenviar la activación. Es posible que el miembro ya no esté pendiente.",
+      "suspend": "Suspender membresía",
+      "reactivate": "Reactivar membresía",
+      "identityDisabled": "Identidad deshabilitada globalmente",
+      "identityRemainsDisabled": "La membresía se reactivó, pero la identidad sigue deshabilitada. El equipo de plataforma debe restaurar el acceso.",
+      "accessUpdated": "Se actualizó el acceso de la membresía.",
+      "accessUpdateFailed": "No se pudo actualizar el acceso de la membresía.",
+      "remove": "Eliminar miembro",
+      "removeTitle": "¿Eliminar a este miembro?",
+      "removeDescription": "Esto elimina la membresía. Si es su última membresía, se eliminarán su cuenta, sesiones y datos de autenticación.",
+      "removeSuccess": "Se eliminó al miembro de esta organización.",
+      "leave": "Salir de la organización",
+      "leaveTitle": "¿Salir de esta organización?",
+      "leaveDescription": "Si esta es tu última membresía, se eliminarán tu cuenta, sesiones y datos de autenticación.",
+      "leaveSuccess": "Saliste de esta organización.",
+      "identityDeletedFeedback": "Se eliminó tu última membresía y se borró tu cuenta.",
+      "removeFailed": "No se pudo eliminar la membresía. Las reglas de continuidad pueden impedir este cambio.",
+      "transfer": "Transferir propiedad",
+      "transferTitle": "Transferir la propiedad de la organización",
+      "transferDescription": "Elige a otro miembro activo. Se convertirá en propietario y conservarás el acceso de administrador.",
+      "transferRecipient": "Nuevo propietario",
+      "transferChooseRecipient": "Elige un miembro activo",
+      "transferConfirm": "Transferir propiedad",
+      "transferSuccess": "Se transfirió la propiedad de la organización.",
+      "transferFailed": "No se pudo transferir la propiedad.",
+      "searchFailed": "No se pudo actualizar la búsqueda de miembros."
+    },
+    "deletion": {
+      "sectionTitle": "Zona peligrosa",
+      "open": "Eliminar organización",
+      "title": "¿Eliminar esta organización?",
+      "description": "Esto eliminará permanentemente {slug}, sus membresías, invitaciones, roles y datos de la organización.",
+      "confirmLabel": "Escribe {slug} para confirmar",
+      "confirm": "Eliminar organización permanentemente",
+      "working": "Eliminando...",
+      "failed": "No se pudo eliminar la organización.",
+      "cleanupPending": "La organización se eliminó. El contexto de tu sesión está obsoleto; vuelve a cargar o inicia sesión para continuar."
+    },
+    "invitations": {
+      "title": "Invitaciones de la organización",
+      "search": "Buscar correo del destinatario",
+      "filterStatus": "Filtrar por estado",
+      "empty": "No se encontraron invitaciones.",
+      "email": "Correo del destinatario",
+      "role": "Rol",
+      "status": "Estado",
+      "statusPending": "Pendiente",
+      "statusExpired": "Vencida",
+      "statusAccepted": "Aceptada",
+      "statusRejected": "Rechazada",
+      "statusCanceled": "Cancelada",
+      "expiresAt": "Vence",
+      "createdAt": "Creada",
+      "resend": "Reenviar invitación",
+      "cancel": "Cancelar invitación",
+      "create": "Invitar a alguien",
+      "createTitle": "Crear una invitación",
+      "createDescription": "Elige a quién invitar y el rol que tendrá en la organización.",
+      "submit": "Enviar invitación",
+      "working": "Procesando...",
+      "createSuccess": "Invitación enviada.",
+      "deliveryFailed": "La invitación sigue pendiente, pero no se pudo enviar el correo. Puedes reenviarla.",
+      "createForbidden": "No tienes permiso para crear esta invitación.",
+      "createFailed": "No se pudo crear la invitación. Inténtalo de nuevo.",
+      "resendSuccess": "Se envió una invitación de reemplazo.",
+      "cancelSuccess": "Invitación cancelada.",
+      "actionFailed": "No se pudo completar la acción de invitación.",
+      "statusFilter": {
+        "all": "Todos los estados",
+        "pending": "Pendientes",
+        "expired": "Vencidas",
+        "accepted": "Aceptadas",
+        "rejected": "Rechazadas",
+        "canceled": "Canceladas"
+      },
+      "dataTable": {
+        "columns": "Columnas",
+        "rowsPerPage": "Filas por página",
+        "goToPage": "Ir a la página {page}",
+        "sortAscending": "Orden ascendente",
+        "sortDescending": "Orden descendente",
+        "clearSorting": "Quitar orden",
+        "hideColumn": "Ocultar columna",
+        "columnLabels": {
+          "email": "Correo",
+          "role": "Rol",
+          "status": "Estado",
+          "expiresAt": "Vence",
+          "createdAt": "Creada",
+          "actions": "Acciones"
+        }
+      }
+    },
+    "recipientInvitation": {
+      "title": "Invitación de la organización",
+      "anonymousInstructions": "Inicia sesión o crea una cuenta con la dirección de correo electrónico que recibió esta invitación.",
+      "reopenOriginalLink": "Después de registrarte o iniciar sesión, verifica esa dirección de correo y vuelve a abrir el enlace original de invitación que recibiste por correo.",
+      "verifyEmailInstructions": "Verifica la dirección de correo de tu cuenta antes de ver o responder a esta invitación.",
+      "accountLinks": "Acceso a la cuenta",
+      "signIn": "Iniciar sesión",
+      "signUp": "Registrarse",
+      "unavailable": "Esta invitación no está disponible para esta cuenta.",
+      "invitedEmail": "Invitación para {email}",
+      "organization": "Organización: {organization}",
+      "role": "Rol: {role}",
+      "pending": "Pendiente; vence el {expiresAt}.",
+      "accepted": "Invitación aceptada.",
+      "rejected": "Invitación rechazada.",
+      "canceled": "Invitación cancelada.",
+      "expired": "Esta invitación ha vencido.",
+      "accept": "Aceptar invitación",
+      "reject": "Rechazar invitación",
+      "acceptedFeedback": "Invitación aceptada. La organización activa no ha cambiado.",
+      "rejectedFeedback": "Invitación rechazada.",
+      "acceptFailed": "No se pudo aceptar la invitación. Es posible que ya no esté disponible.",
+      "rejectFailed": "No se pudo rechazar la invitación. Es posible que ya no esté disponible.",
+      "switchPrompt": "Tu organización activa es {activeOrganization}. Cámbiala solo si así lo decides.",
+      "switchOrganization": "Cambiar a la organización de la invitación",
+      "switchFailed": "No se pudo seleccionar la organización. Es posible que ya no esté disponible."
     }
   },
   "errors": {
