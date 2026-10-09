@@ -38,7 +38,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AuthorizationProvider snapshot={snapshot}>
       <div className="dark flex h-screen flex-col">
-        <AppHeader />
+        <AppHeader
+          organizations={organizations.map(({ id, slug, name }) => ({ id, slug, name }))}
+          activeOrganizationId={active?.id ?? null}
+        />
         <div className="flex flex-1 overflow-hidden">
           <AppSidebar
             initialCollapsed={sidebarCollapsed}

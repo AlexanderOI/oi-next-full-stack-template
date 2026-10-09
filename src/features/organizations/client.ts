@@ -8,3 +8,4 @@ export { RecipientInvitation } from "./components/recipient-invitation";
 export { OrganizationContextChoice } from "./components/organization-context-choice";
 export { OrganizationContextRecovery } from "./components/organization-context-recovery";
 export { OrganizationSwitcher } from "./components/organization-switcher";
+export { OrganizationHeaderSelector } from "./components/organization-header-selector";

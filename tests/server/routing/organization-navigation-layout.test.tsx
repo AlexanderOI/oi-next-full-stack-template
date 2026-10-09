@@ -30,10 +30,13 @@ vi.mock("@/features/organizations/server", () => ({
 
 import AppLayout from "@/app/(app)/layout";
 
-async function sidebarProps() {
+async function shellProps() {
   const layout = await AppLayout({ children: null });
-  const shell = layout.props.children;
-  return shell.props.children[1].props.children[0].props;
+  return layout.props.children;
+}
+
+async function sidebarProps() {
+  return (await shellProps()).props.children[1].props.children[0].props;
 }
 
 describe("organization navigation layout", () => {
@@ -55,6 +58,10 @@ describe("organization navigation layout", () => {
       canReadMembers: true,
       canReadInvitations: true,
     });
+    expect((await shellProps()).props.children[0].props).toEqual({
+      organizations: [{ id: "org-1", slug: "alpha", name: "Alpha" }],
+      activeOrganizationId: "org-1",
+    });
     expect(mocks.organizations).toHaveBeenCalledWith("user-1");
     expect(mocks.members).toHaveBeenCalledWith("user-1", "org-1");
     expect(mocks.invitations).toHaveBeenCalledWith("user-1", "org-1");
@@ -66,6 +73,7 @@ describe("organization navigation layout", () => {
       session: { activeOrganizationId: activeId },
     });
     expect((await sidebarProps()).organizationNavigation).toBeNull();
+    expect((await shellProps()).props.children[0].props.activeOrganizationId).toBeNull();
     expect(mocks.members).not.toHaveBeenCalled();
     expect(mocks.invitations).not.toHaveBeenCalled();
   });
