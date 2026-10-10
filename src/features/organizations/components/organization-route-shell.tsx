@@ -5,7 +5,6 @@ import { getActiveOrganizations } from "../lib/list-current-active-organizations
 import { resolveOrganizationContext } from "../lib/resolve-organization-context";
 import { OrganizationContextChoice } from "./organization-context-choice";
 import { OrganizationContextRecovery } from "./organization-context-recovery";
-import { OrganizationSwitcher } from "./organization-switcher";
 import type { OrganizationSessionContext } from "../interfaces/organization-session-context";
 
 interface Props {
@@ -25,10 +24,6 @@ export async function OrganizationRouteShell({ organizationSlug, session, childr
 
     return (
       <div>
-        <OrganizationSwitcher
-          organizations={organizations}
-          activeOrganizationId={result.context.organizationId}
-        />
         <h1 className="mb-4 text-2xl font-semibold">{result.context.organizationName}</h1>
         {children}
       </div>

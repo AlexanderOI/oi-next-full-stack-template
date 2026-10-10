@@ -5,7 +5,6 @@ import { getCurrentSession } from "@/features/auth/server";
 import {
   OrganizationContextChoice,
   OrganizationContextRecovery,
-  OrganizationSwitcher,
 } from "@/features/organizations/client";
 import {
   getActiveOrganizations,
@@ -38,10 +37,6 @@ export default async function OrganizationLayout({ children, params }: Props) {
 
     return (
       <div>
-        <OrganizationSwitcher
-          organizations={organizations}
-          activeOrganizationId={result.context.organizationId}
-        />
         <h1 className="mb-4 text-2xl font-semibold">{result.context.organizationName}</h1>
         {children}
       </div>

@@ -69,6 +69,17 @@ describe("organization route shell", () => {
     const result = await renderRoute();
     const renderedChildren = (result.props as { children: unknown[] }).children;
     expect(renderedChildren).toContain(protectedChild);
+    expect(renderedChildren).not.toContainEqual(
+      expect.objectContaining({ props: expect.objectContaining({ activeOrganizationId: "org-a" }) })
+    );
+  });
+
+  it("recovers rather than exposing children after membership disappears", async () => {
+    mocks.resolve.mockResolvedValue({ ok: true, context });
+    mocks.organizations.mockResolvedValue([{ id: "org-b", slug: "bravo", name: "Bravo" }]);
+    const result = await renderRoute();
+    expect(result.type).toBe(OrganizationContextRecovery);
+    expect(JSON.stringify(result.props)).not.toContain("private tenant content");
   });
 
   it.each([

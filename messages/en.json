@@ -457,6 +457,20 @@
     }
   },
   "organizations": {
+    "chooser": {
+      "noAccess": "No organization access",
+      "noMembership": "You do not have an active organization membership yet.",
+      "title": "Your organizations",
+      "instruction": "Use the organization selector in the header to choose your active organization."
+    },
+    "contextChoice": {
+      "changed": "Organization context changed",
+      "select": "Select an organization",
+      "active": "Your active organization is {name}.",
+      "none": "No organization is active.",
+      "instruction": "Use the organization selector in the header to choose {name}.",
+      "goToActive": "Go to {name}"
+    },
     "members": {
       "title": "Organization members",
       "workspace": "Organization workspace",
