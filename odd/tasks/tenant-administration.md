@@ -7,7 +7,7 @@ Replace product-facing platform-wide administration with organization-scoped adm
 ## Confirmed product decisions
 
 - There is no product-facing sysadmin with authority over every organization's users or roles.
-- One full-access organization Admin replaces the distinct Owner product role. The personal-organization creator starts as Admin, including organization deletion/transfer and custom role/user management. Preserve at least one active administrator per surviving organization.
+- One full-access organization Admin replaces the distinct Owner product role. The personal-organization creator starts as Admin, including organization deletion and custom role/user management. The former ownership-transfer action is retired: Admin assignments are managed from Users, with no surviving organization left without an active Admin.
 - Member is the other initially protected organization role. Custom roles belong to a specific organization.
 - Reuse the existing role and user administration pages/components rather than building parallel organization-only implementations. Routes may remain `/admin/roles` and `/admin/users`, but server data/actions must be tenant-scoped.
 - `src/features/organizations/components/` is reorganized into responsibility folders such as `dialogs/`, `pages/`, and `tables/` as appropriate, without speculative empty folders.
@@ -30,8 +30,11 @@ Replace product-facing platform-wide administration with organization-scoped adm
 
 ## Work units
 
-- [ ] TENANT-ADMIN-001 — Establish a read-only inventory of role/assignment consumers, existing data shape, bootstrap effects, and migration order; finalize compatibility contract and security tests before altering authorization.
-- [ ] TENANT-ADMIN-002 — Add the full-access organization Admin policy and non-destructive compatibility path for existing Owner/Admin assignments, with signup/bootstrap/action tests; produce migrations only if necessary, do not apply them.
+- [x] TENANT-ADMIN-001 — Establish a read-only inventory of role/assignment consumers, existing data shape, bootstrap effects, and migration order; finalize compatibility contract and security tests before altering authorization.
+- [ ] TENANT-ADMIN-002 (in progress) — Add the full-access organization Admin policy and non-destructive compatibility path for existing Owner/Admin assignments, with signup/bootstrap/action tests; produce migrations only if necessary, do not apply them.
+  - [x] 002a — Protected Admin grant parity and personal signup Admin, preserving legacy Owner retries.
+  - [ ] 002b — Admin-sensitive deletion and last-Admin continuity, with legacy Owner compatibility.
+  - [ ] 002c — Retire ownership-transfer action/UI and Owner invitation choice without opening direct-action bypasses.
 - [ ] TENANT-ADMIN-003 — Make `/admin/roles` and existing role manager/actions tenant-scoped, including custom-role CRUD and cross-tenant denial tests.
 - [ ] TENANT-ADMIN-004 — Make `/admin/users` and existing user manager/actions tenant-scoped, including provisioning, membership-role assignment, access control, and cross-tenant denial tests.
 - [ ] TENANT-ADMIN-005 — Remove product-facing platform admin navigation/authorization only after tenant paths are functional and validated; preserve data during any transition.
@@ -42,11 +45,13 @@ Replace product-facing platform-wide administration with organization-scoped adm
 
 - Read-only exploration confirmed current signup assigns protected Owner, not Admin. The current Admin lacks owner-sensitive permissions. Existing `/admin/roles` and `/admin/users` read platform roles/users and cannot be safely reused by changing labels alone.
 - The user explicitly chose a single full-access Admin product role. Existing data may already contain Owner/Admin assignments, so preserve and map it; no database reset is authorized.
+- The user explicitly retired ownership transfer; administration changes belong in the reused Users page, protecting the last active Admin. No new transfer control or Owner invitation is to be offered.
 
 ## Verification evidence
 
-- TENANT-ADMIN-001: source-based inventory and non-destructive compatibility/rollout proposal recorded in `docs/architecture/tenant-administration-transition.md`; no live database touched. Independent read-only verification found no material factual problems. Scoped Prettier passed; `git diff --check` passed but does not include these still-untracked documents. No behavior tests apply to this documentation-only work unit. Commit identity pending authorization.
+- TENANT-ADMIN-002a: Admin grant parity and signup compatibility written test-first (observed three RED failures; 16 GREEN tests). Independent verifier confirms 16 tests, type-check, Prettier, scoped lint and diff checks pass, but mocks do not establish real DB predicates or bootstrap persistence. Owner-only lifecycle changes remain pending; do not deploy this partial slice alone. Work-unit commit pending.
+- TENANT-ADMIN-001: source-based inventory and non-destructive compatibility/rollout proposal recorded in `docs/architecture/tenant-administration-transition.md`; no live database touched. Independent read-only verification found no material factual problems. Scoped Prettier passed; `git diff --check` passed but does not include these still-untracked documents. No behavior tests apply to this documentation-only work unit. Work-unit commit: `b96f047`.
 
 ## Next step
 
-Close TENANT-ADMIN-001 with a local work-unit commit if authorized, then begin test-first Admin policy and signup compatibility (002). Do not apply database changes.
+Implement TENANT-ADMIN-002 test-first: full-access Admin policy and signup compatibility while preserving existing Owner assignments. Do not apply database changes.

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { member, membershipRole, organization, role, user } from "@/db/schema";
@@ -49,20 +49,21 @@ export async function completePublicSignup(userId: string, username: string, nam
   const displayName = `${name}'s organization`;
 
   return db.transaction(async (tx) => {
-    const [ownerRole] = await tx
+    const [adminRole] = await tx
       .select({ id: role.id })
       .from(role)
       .where(
         and(
-          eq(role.id, "system:organization:owner"),
-          eq(role.key, "owner"),
+          eq(role.id, "system:organization:admin"),
+          eq(role.key, "admin"),
+          isNull(role.organizationId),
           eq(role.scope, "organization"),
           eq(role.isProtected, true)
         )
       )
       .limit(1);
 
-    if (!ownerRole) throw new Error("PUBLIC_SIGNUP_OWNER_ROLE_NOT_BOOTSTRAPPED");
+    if (!adminRole) throw new Error("PUBLIC_SIGNUP_ADMIN_ROLE_NOT_BOOTSTRAPPED");
 
     const [existingOrganization] = await tx
       .select({
@@ -80,7 +81,7 @@ export async function completePublicSignup(userId: string, username: string, nam
       if (
         existingOrganization.personalSignupOwnerUserId !== userId ||
         !hasExpectedPersonalOrganization(existingOrganization, slugBase, displayName) ||
-        !(await hasConsistentOwner(tx, userId, membershipId, organizationId, ownerRole.id))
+        !(await hasConsistentAdministrator(tx, userId, membershipId, organizationId, adminRole.id))
       ) {
         throw new Error("PUBLIC_SIGNUP_ONBOARDING_STATE_INCONSISTENT");
       }
@@ -127,7 +128,13 @@ export async function completePublicSignup(userId: string, username: string, nam
             if (
               racedOrganization.personalSignupOwnerUserId !== userId ||
               !hasExpectedPersonalOrganization(racedOrganization, slugBase, displayName) ||
-              !(await hasConsistentOwner(tx, userId, membershipId, organizationId, ownerRole.id))
+              !(await hasConsistentAdministrator(
+                tx,
+                userId,
+                membershipId,
+                organizationId,
+                adminRole.id
+              ))
             ) {
               throw new Error("PUBLIC_SIGNUP_ONBOARDING_STATE_INCONSISTENT");
             }
@@ -141,12 +148,12 @@ export async function completePublicSignup(userId: string, username: string, nam
           id: membershipId,
           organizationId,
           userId,
-          role: "owner",
+          role: "admin",
           status: "active",
         });
         await tx.insert(membershipRole).values({
           membershipId,
-          roleId: ownerRole.id,
+          roleId: adminRole.id,
           assignedByMembershipId: null,
         });
         break;
@@ -179,34 +186,52 @@ function hasExpectedPersonalOrganization(
   return current.name === expectedName && slugMatches;
 }
 
-async function hasConsistentOwner(
+async function hasConsistentAdministrator(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   userId: string,
   membershipId: string,
   organizationId: string,
-  ownerRoleId: string
+  adminRoleId: string
 ) {
-  const [activeOwner] = await tx
-    .select({ id: member.id })
+  const [activeAdministrator] = await tx
+    .select({ id: member.id, role: member.role })
     .from(member)
     .where(
       and(
         eq(member.id, membershipId),
         eq(member.organizationId, organizationId),
         eq(member.userId, userId),
-        eq(member.status, "active"),
-        eq(member.role, "owner")
+        eq(member.status, "active")
       )
     )
     .limit(1);
-  if (!activeOwner) return false;
+  if (!activeAdministrator) return false;
 
-  const [ownerAssignment] = await tx
+  let roleId = adminRoleId;
+  if (activeAdministrator.role === "owner") {
+    const [legacyOwnerRole] = await tx
+      .select({ id: role.id })
+      .from(role)
+      .where(
+        and(
+          eq(role.id, "system:organization:owner"),
+          eq(role.key, "owner"),
+          eq(role.scope, "organization"),
+          isNull(role.organizationId),
+          eq(role.isProtected, true)
+        )
+      )
+      .limit(1);
+    if (!legacyOwnerRole) return false;
+    roleId = legacyOwnerRole.id;
+  } else if (activeAdministrator.role !== "admin") {
+    return false;
+  }
+
+  const [administratorAssignment] = await tx
     .select({ membershipId: membershipRole.membershipId })
     .from(membershipRole)
-    .where(
-      and(eq(membershipRole.membershipId, membershipId), eq(membershipRole.roleId, ownerRoleId))
-    )
+    .where(and(eq(membershipRole.membershipId, membershipId), eq(membershipRole.roleId, roleId)))
     .limit(1);
-  return Boolean(ownerAssignment);
+  return Boolean(administratorAssignment);
 }

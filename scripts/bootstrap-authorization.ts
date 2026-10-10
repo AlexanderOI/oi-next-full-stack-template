@@ -54,23 +54,13 @@ const systemRoles: readonly {
     id: "system:organization:admin",
     key: "admin",
     name: "Administrator",
-    description: "Organization administration without destructive or security-sensitive grants",
+    description: "Full organization administration access",
     scope: "organization",
     organizationId: null,
     isProtected: true,
     permissions: permissionCatalog
       .flatMap(({ permissions }) => permissions)
-      .filter(
-        ({ scope, key }) =>
-          scope === "organization" &&
-          ![
-            PERMISSIONS.ORGANIZATION_DELETE,
-            PERMISSIONS.ORGANIZATION_OWNERSHIP_TRANSFER,
-            PERMISSIONS.ORGANIZATION_RESTRICTIONS_CREATE,
-            PERMISSIONS.ORGANIZATION_ALLOWLIST_GRANTS_READ,
-            PERMISSIONS.ORGANIZATION_ALLOWLIST_GRANTS_CREATE,
-          ].some((excluded) => excluded === key)
-      )
+      .filter(({ scope }) => scope === "organization")
       .map(({ key }) => key),
   },
   {

@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("drizzle-orm", () => ({
   and: vi.fn((...conditions) => ({ and: conditions })),
   eq: vi.fn((column, value) => ({ column, value })),
+  isNull: vi.fn((column) => ({ column, isNull: true })),
 }));
 vi.mock("@/db/drizzle", () => ({
   db: {
@@ -39,7 +40,13 @@ vi.mock("@/db/schema", () => ({
     name: "organization.name",
     personalSignupOwnerUserId: "organization.personalSignupOwnerUserId",
   },
-  role: { id: "role.id", key: "role.key", scope: "role.scope", isProtected: "role.isProtected" },
+  role: {
+    id: "role.id",
+    key: "role.key",
+    scope: "role.scope",
+    isProtected: "role.isProtected",
+    organizationId: "role.organizationId",
+  },
   user: { id: "user.id", initialActiveOrganizationId: "user.initialActiveOrganizationId" },
 }));
 
@@ -108,7 +115,7 @@ describe("public signup organization onboarding", () => {
       personalSignupOwnerUserId: "user-1",
     };
     mocks.queryResults = [
-      [{ id: "system:organization:owner" }],
+      [{ id: "system:organization:admin" }],
       [],
       [{ id: "another-organization" }],
       [],
@@ -129,16 +136,26 @@ describe("public signup organization onboarding", () => {
         id: "personal-member-user-1",
         organizationId: organization.id,
         userId: "user-1",
-        role: "owner",
+        role: "admin",
         status: "active",
       },
       {
         membershipId: "personal-member-user-1",
-        roleId: "system:organization:owner",
+        roleId: "system:organization:admin",
         assignedByMembershipId: null,
       },
     ]);
     expect(mocks.updateValues).toEqual([{ initialActiveOrganizationId: organization.id }]);
+  });
+
+  it("fails closed when protected Admin is missing without writing onboarding state", async () => {
+    mocks.queryResults = [[]];
+    await expect(completePublicSignup("user-1", "Alex", "Alex")).rejects.toThrow(
+      "PUBLIC_SIGNUP_ADMIN_ROLE_NOT_BOOTSTRAPPED"
+    );
+    expect(mocks.insert).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.delete).not.toHaveBeenCalled();
   });
 
   it("compensates by deleting the stable personal organization and identity together", async () => {
@@ -252,6 +269,51 @@ describe("public signup organization onboarding", () => {
     expect(mocks.update).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      projection: "admin",
+      legacyRole: [],
+      assignment: [{ membershipId: "personal-member-user-1" }],
+      succeeds: true,
+    },
+    { projection: "admin", legacyRole: [], assignment: [], succeeds: false },
+    {
+      projection: "owner",
+      legacyRole: [{ id: "system:organization:owner" }],
+      assignment: [],
+      succeeds: false,
+    },
+    { projection: "owner", legacyRole: [], assignment: [], succeeds: false },
+    { projection: "member", legacyRole: [], assignment: [], succeeds: false },
+  ])(
+    "validates retry projection and canonical assignment: $projection / $succeeds",
+    async ({ projection, legacyRole, assignment, succeeds }) => {
+      const organization = {
+        id: "personal-org-user-1",
+        slug: "alex",
+        name: "Alex's organization",
+        personalSignupOwnerUserId: "user-1",
+      };
+      mocks.queryResults = [
+        [{ id: "system:organization:admin" }],
+        [organization],
+        [{ id: "personal-member-user-1", role: projection }],
+        ...(projection === "owner" ? [legacyRole] : []),
+        assignment,
+      ];
+      if (succeeds) {
+        await expect(completePublicSignup("user-1", "Alex", "Alex")).resolves.toEqual(organization);
+      } else {
+        await expect(completePublicSignup("user-1", "Alex", "Alex")).rejects.toThrow(
+          "PUBLIC_SIGNUP_ONBOARDING_STATE_INCONSISTENT"
+        );
+        expect(mocks.update).not.toHaveBeenCalled();
+      }
+      expect(mocks.insert).not.toHaveBeenCalled();
+      expect(mocks.delete).not.toHaveBeenCalled();
+    }
+  );
+
   it("treats a retry as success only when the stable personal org and active owner assignment agree", async () => {
     const organization = {
       id: "personal-org-user-1",
@@ -260,9 +322,10 @@ describe("public signup organization onboarding", () => {
       personalSignupOwnerUserId: "user-1",
     };
     mocks.queryResults = [
-      [{ id: "system:organization:owner" }],
+      [{ id: "system:organization:admin" }],
       [organization],
-      [{ id: "personal-member-user-1" }],
+      [{ id: "personal-member-user-1", role: "owner" }],
+      [{ id: "system:organization:owner" }],
       [{ membershipId: "personal-member-user-1" }],
     ];
 
