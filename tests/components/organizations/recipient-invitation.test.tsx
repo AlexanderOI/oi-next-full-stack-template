@@ -4,8 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   accept: vi.fn(),
   reject: vi.fn(),
-  switchOrg: vi.fn(),
-  push: vi.fn(),
+  refresh: vi.fn(),
   locale: "en",
 }));
 vi.mock("next-intl", () => ({
@@ -15,7 +14,7 @@ vi.mock("next-intl", () => ({
   },
 }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.push, refresh: vi.fn() }),
+  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 vi.mock("@/components/ui/button", () => ({
   Button: (props: React.ComponentProps<"button">) => <button {...props} />,
@@ -47,7 +46,6 @@ function renderRecipient(view: Extract<RecipientInvitationView, { state: "invita
       view={clientView}
       acceptAction={() => mocks.accept()}
       rejectAction={() => mocks.reject()}
-      switchAction={() => mocks.switchOrg()}
     />
   );
 }
@@ -63,7 +61,6 @@ beforeEach(() => {
     success: true,
     data: { changed: true, invitationId: "secret-capability" },
   });
-  mocks.switchOrg.mockResolvedValue({ success: true, href: "/org/target" });
 });
 
 describe("recipient invitation UI", () => {
@@ -112,7 +109,8 @@ describe("recipient invitation UI", () => {
     expect(await screen.findByText("rejectedFeedback")).toBeInTheDocument();
   });
 
-  it("shows accepted switch CTA but does not switch until explicitly clicked", async () => {
+  it.each(["en", "es"])("links to the header selector without switching in %s", (locale) => {
+    mocks.locale = locale;
     renderRecipient({
       ...invitation,
       status: "accepted",
@@ -121,11 +119,20 @@ describe("recipient invitation UI", () => {
       showSwitch: true,
       activeOrganizationName: "Other Org",
     });
-    expect(mocks.switchOrg).not.toHaveBeenCalled();
+    const prefix = locale === "es" ? "es:" : "";
+    expect(screen.getByText(`${prefix}switchPrompt:Other Org`)).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: `${prefix}goToOrganizationSelector` });
+    expect(link).toHaveAttribute("href", "/org");
+    expect(link.getAttribute("href")).not.toContain("secret-capability");
+    expect(link.getAttribute("href")).not.toContain("target");
+    expect(screen.queryByRole("button", { name: /switchOrganization/ })).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "switchOrganization" }));
-    await waitFor(() => expect(mocks.switchOrg).toHaveBeenCalledOnce());
-    expect(mocks.push).toHaveBeenCalledWith("/org/target");
+  it("omits the selector link when switching is not offered", () => {
+    renderRecipient(invitation);
+    expect(
+      screen.queryByRole("link", { name: "goToOrganizationSelector" })
+    ).not.toBeInTheDocument();
   });
 
   it.each(["expired", "rejected", "canceled"] as const)(

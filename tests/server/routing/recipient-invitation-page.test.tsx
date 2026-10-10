@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
   view: vi.fn(),
   accept: vi.fn(),
   reject: vi.fn(),
-  switchOrg: vi.fn(),
   notFound: vi.fn(() => {
     throw new Error("NOT_FOUND");
   }),
@@ -18,7 +17,6 @@ vi.mock("@/features/organizations/server", () => ({
   getRecipientInvitation: mocks.view,
   acceptOrganizationInvitationAction: mocks.accept,
   rejectOrganizationInvitationAction: mocks.reject,
-  switchOrganization: mocks.switchOrg,
 }));
 vi.mock("@/features/organizations/client", () => ({
   RecipientInvitation: (props: { view: unknown; acceptAction?: unknown }) => (
@@ -66,5 +64,24 @@ describe("public recipient invitation route", () => {
     const pageProps = (page as { props: Record<string, unknown> }).props;
     expect(JSON.stringify(pageProps.view)).not.toContain("secret-capability");
     expect(pageProps.acceptAction).toEqual(expect.any(Function));
+    expect(pageProps).not.toHaveProperty("switchAction");
+    expect(pageProps.view).not.toHaveProperty("organizationId");
+  });
+
+  it("does not bind a switch mutation for an accepted invitation with a switch prompt", async () => {
+    mocks.view.mockResolvedValue({
+      state: "invitation",
+      organizationId: "target-org",
+      status: "accepted",
+      canAccept: false,
+      canReject: false,
+      showSwitch: true,
+    });
+    const page = await RecipientInvitationPage({
+      params: Promise.resolve({ invitationId: "secret-capability" }),
+    });
+    const pageProps = (page as { props: Record<string, unknown> }).props;
+    expect(pageProps).not.toHaveProperty("switchAction");
+    expect(pageProps.view).not.toHaveProperty("organizationId");
   });
 });

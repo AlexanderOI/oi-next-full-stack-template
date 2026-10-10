@@ -11,22 +11,18 @@ import type { RecipientInvitationView } from "../contracts";
 type ResponseActionResult =
   | { success: true; data: { changed: boolean; invitationId: string } }
   | { success: false; code: string };
-type SwitchActionResult = { success: true; href: string } | { success: false; code: string };
-
 type InvitationView = Extract<RecipientInvitationView, { state: "invitation" }>;
 type ClientView =
   Exclude<RecipientInvitationView, InvitationView> | Omit<InvitationView, "organizationId">;
-type Feedback =
-  "acceptFailed" | "rejectFailed" | "acceptedFeedback" | "rejectedFeedback" | "switchFailed";
+type Feedback = "acceptFailed" | "rejectFailed" | "acceptedFeedback" | "rejectedFeedback";
 
 interface Props {
   view: ClientView;
   acceptAction?: () => Promise<ResponseActionResult>;
   rejectAction?: () => Promise<ResponseActionResult>;
-  switchAction?: () => Promise<SwitchActionResult>;
 }
 
-export function RecipientInvitation({ view, acceptAction, rejectAction, switchAction }: Props) {
+export function RecipientInvitation({ view, acceptAction, rejectAction }: Props) {
   const t = useTranslations("organizations.recipientInvitation");
   const router = useRouter();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -45,19 +41,6 @@ export function RecipientInvitation({ view, acceptAction, rejectAction, switchAc
       }
       setFeedback(accept ? "acceptedFeedback" : "rejectedFeedback");
       router.refresh();
-    });
-  }
-
-  function handleSwitch() {
-    if (view.state !== "invitation" || !switchAction) return;
-    setFeedback(null);
-    startTransition(async () => {
-      const result = await switchAction();
-      if (!result.success) {
-        setFeedback("switchFailed");
-        return;
-      }
-      router.push(result.href);
     });
   }
 
@@ -117,12 +100,10 @@ export function RecipientInvitation({ view, acceptAction, rejectAction, switchAc
           {t("reject")}
         </Button>
       )}
-      {view.showSwitch && switchAction && (
+      {view.showSwitch && (
         <div className="space-y-2">
           <p>{t("switchPrompt", { activeOrganization: view.activeOrganizationName ?? "" })}</p>
-          <Button type="button" disabled={isPending} onClick={handleSwitch}>
-            {t("switchOrganization")}
-          </Button>
+          <Link href="/org">{t("goToOrganizationSelector")}</Link>
         </div>
       )}
       {feedback && <p role="status">{t(feedback)}</p>}

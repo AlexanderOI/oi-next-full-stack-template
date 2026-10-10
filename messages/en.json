@@ -635,9 +635,8 @@
       "rejectedFeedback": "Invitation declined.",
       "acceptFailed": "The invitation could not be accepted. It may no longer be available.",
       "rejectFailed": "The invitation could not be declined. It may no longer be available.",
-      "switchPrompt": "Your active organization is {activeOrganization}. Switch only if you choose to.",
-      "switchOrganization": "Switch to invited organization",
-      "switchFailed": "The organization could not be selected. It may no longer be available."
+      "switchPrompt": "Your active organization is {activeOrganization}. To select another organization, use the selector in the app header.",
+      "goToOrganizationSelector": "Go to organizations"
     }
   },
   "errors": {

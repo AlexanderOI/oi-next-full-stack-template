@@ -4,7 +4,6 @@ import {
   acceptOrganizationInvitationAction,
   getRecipientInvitation,
   rejectOrganizationInvitationAction,
-  switchOrganization,
 } from "@/features/organizations/server";
 
 interface Props {
@@ -27,7 +26,8 @@ export default async function RecipientInvitationPage({ params }: Props) {
     );
   }
 
-  const { organizationId, ...clientView } = view;
+  const { organizationId: _organizationId, ...clientView } = view;
+  void _organizationId;
   return (
     <RecipientInvitation
       view={clientView}
@@ -37,7 +37,6 @@ export default async function RecipientInvitationPage({ params }: Props) {
       rejectAction={
         view.canReject ? rejectOrganizationInvitationAction.bind(null, { invitationId }) : undefined
       }
-      switchAction={view.showSwitch ? switchOrganization.bind(null, organizationId) : undefined}
     />
   );
 }

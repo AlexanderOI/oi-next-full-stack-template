@@ -643,9 +643,8 @@
       "rejectedFeedback": "Invitación rechazada.",
       "acceptFailed": "No se pudo aceptar la invitación. Es posible que ya no esté disponible.",
       "rejectFailed": "No se pudo rechazar la invitación. Es posible que ya no esté disponible.",
-      "switchPrompt": "Tu organización activa es {activeOrganization}. Cámbiala solo si así lo decides.",
-      "switchOrganization": "Cambiar a la organización de la invitación",
-      "switchFailed": "No se pudo seleccionar la organización. Es posible que ya no esté disponible."
+      "switchPrompt": "Tu organización activa es {activeOrganization}. Para seleccionar otra organización, usa el selector en la cabecera de la aplicación.",
+      "goToOrganizationSelector": "Ir a organizaciones"
     }
   },
   "errors": {
