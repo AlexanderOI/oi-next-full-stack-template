@@ -86,6 +86,7 @@
   "shell": {
     "general": "General",
     "dashboard": "Panel",
+    "panel": "Panel",
     "profile": "Perfil",
     "settings": "Configuración",
     "organizationSection": "Organización",

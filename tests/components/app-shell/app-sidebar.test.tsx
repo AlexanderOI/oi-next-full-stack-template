@@ -51,22 +51,28 @@ describe("AppSidebar", () => {
   it("hides the complete administration section without administration permissions", () => {
     renderSidebar([]);
 
-    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute("href", "/profile");
+    expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeInTheDocument();
     expect(screen.queryByText("Administration")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Roles" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
   });
 
-  it("offers the chooser without an active organization", () => {
+  it("has no chooser or tenant links without an active organization", () => {
     renderSidebar([]);
-    expect(screen.getByRole("link", { name: "Organizations" })).toHaveAttribute("href", "/org");
-    expect(screen.queryByRole("link", { name: "Workspace" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Organizations" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Panel" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Organization")).not.toBeInTheDocument();
+    expect(
+      screen.queryAllByRole("link").every((link) => !link.getAttribute("href")?.startsWith("/org"))
+    ).toBe(true);
   });
 
   it("shows owner workspace and scoped destinations without platform administration", () => {
     renderSidebar([], { slug: "alpha", canReadMembers: true, canReadInvitations: true });
-    expect(screen.getByRole("link", { name: "Workspace" })).toHaveAttribute("href", "/org/alpha");
-    expect(screen.getByRole("link", { name: "Members" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Panel" })).toHaveAttribute("href", "/org/alpha");
+    expect(screen.queryByRole("link", { name: "Organizations" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute(
       "href",
       "/org/alpha/members"
     );
@@ -77,17 +83,43 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("Administration")).not.toBeInTheDocument();
   });
 
+  it("shows only members when invitation access is absent", () => {
+    renderSidebar([], { slug: "beta", canReadMembers: true, canReadInvitations: false });
+    expect(screen.getByRole("link", { name: "Panel" })).toHaveAttribute("href", "/org/beta");
+    expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute(
+      "href",
+      "/org/beta/members"
+    );
+    expect(screen.queryByRole("link", { name: "Invitations" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Roles" })).not.toBeInTheDocument();
+  });
+
+  it("keeps platform users independent of organization access", () => {
+    renderSidebar([PERMISSIONS.USERS_READ], {
+      slug: "beta",
+      canReadMembers: false,
+      canReadInvitations: false,
+    });
+    expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute("href", "/admin/users");
+    expect(screen.getByRole("link", { name: "Panel" })).toHaveAttribute("href", "/org/beta");
+    expect(screen.queryByRole("link", { name: "Invitations" })).not.toBeInTheDocument();
+  });
+
   it("keeps partial organization grants separate from platform grants", () => {
     renderSidebar([PERMISSIONS.ROLES_READ], {
       slug: "alpha",
       canReadMembers: false,
       canReadInvitations: true,
     });
-    expect(screen.queryByRole("link", { name: "Members" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Invitations" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Roles" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Invitations" })).toHaveAttribute(
+      "href",
+      "/org/alpha/invitations"
+    );
+    expect(screen.getByRole("link", { name: "Roles" })).toHaveAttribute("href", "/admin/roles");
     cleanup();
     renderSidebar([PERMISSIONS.ROLES_READ]);
-    expect(screen.queryByRole("link", { name: "Workspace" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Panel" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
   });
 });
