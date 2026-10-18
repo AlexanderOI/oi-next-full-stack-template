@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import {
@@ -64,6 +64,7 @@ export async function getOrganizationDeletionAvailability(userId: string, organi
   const rows = await db
     .select({ roleKey: role.key, isProtected: role.isProtected, permissionKey: permission.key })
     .from(member)
+    .innerJoin(user, eq(member.userId, user.id))
     .innerJoin(membershipRole, eq(member.id, membershipRole.membershipId))
     .innerJoin(role, eq(membershipRole.roleId, role.id))
     .innerJoin(rolePermission, eq(role.id, rolePermission.roleId))
@@ -73,13 +74,17 @@ export async function getOrganizationDeletionAvailability(userId: string, organi
         eq(member.userId, userId),
         eq(member.organizationId, organizationId),
         eq(member.status, "active"),
+        isNull(user.disabledAt),
         eq(role.scope, "organization"),
+        eq(role.isProtected, true),
+        isNull(role.organizationId),
         eq(permission.scope, "organization")
       )
     );
   return (
-    rows.some(({ roleKey, isProtected }) => roleKey === "owner" && isProtected) &&
-    rows.some(({ permissionKey }) => permissionKey === PERMISSIONS.ORGANIZATION_DELETE)
+    rows.some(
+      ({ roleKey, isProtected }) => (roleKey === "admin" || roleKey === "owner") && isProtected
+    ) && rows.some(({ permissionKey }) => permissionKey === PERMISSIONS.ORGANIZATION_DELETE)
   );
 }
 
@@ -122,6 +127,7 @@ export async function deleteOrganization(
         permissionKey: permission.key,
       })
       .from(member)
+      .innerJoin(user, eq(member.userId, user.id))
       .innerJoin(membershipRole, eq(member.id, membershipRole.membershipId))
       .innerJoin(role, eq(membershipRole.roleId, role.id))
       .innerJoin(rolePermission, eq(role.id, rolePermission.roleId))
@@ -132,16 +138,21 @@ export async function deleteOrganization(
           eq(member.userId, actor.userId),
           eq(member.organizationId, target.id),
           eq(member.status, "active"),
+          isNull(user.disabledAt),
           eq(role.scope, "organization"),
+          eq(role.isProtected, true),
+          isNull(role.organizationId),
           eq(permission.scope, "organization")
         )
       )
       .for("update");
-    const isOwner = actorRows.some((row) => row.roleKey === "owner" && row.isProtected);
+    const administrator = actorRows.find(
+      (row) => (row.roleKey === "admin" || row.roleKey === "owner") && row.isProtected
+    );
     const canDelete = actorRows.some(
       (row) => row.permissionKey === PERMISSIONS.ORGANIZATION_DELETE
     );
-    if (!isOwner || !canDelete) throw new Error("FORBIDDEN");
+    if (!administrator || !canDelete) throw new Error("FORBIDDEN");
 
     const affected = (await tx
       .select({
@@ -271,7 +282,7 @@ export async function deleteOrganization(
           name: affected.find(({ userId }) => userId === actor.userId)?.name ?? null,
           email: affected.find(({ userId }) => userId === actor.userId)?.email ?? null,
           username: affected.find(({ userId }) => userId === actor.userId)?.username ?? null,
-          role: actorRows.find(({ roleKey }) => roleKey === "owner")?.roleKey ?? null,
+          role: administrator.roleKey,
         },
         affectedUsers: affectedUserSnapshots,
       },

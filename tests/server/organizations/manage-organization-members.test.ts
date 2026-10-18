@@ -307,8 +307,25 @@ describe("organization membership lifecycle service", () => {
         memberId: "target-member",
         status: "suspended",
       })
-    ).rejects.toThrow("LAST_ACTIVE_OWNER");
+    ).rejects.toThrow("LAST_ACTIVE_ADMIN");
     expect(mocks.updates).toEqual([]);
+  });
+
+  it("allows suspension when Admin and legacy Owner memberships remain", async () => {
+    mocks.queryResults.push(
+      [{ id: "org-a" }],
+      grants,
+      [{ id: "target-member", userId: "target-user", status: "active", disabledAt: null }],
+      [{ total: 2 }],
+      [{ membershipId: "target-member" }, { membershipId: "admin-member" }]
+    );
+    await expect(
+      manageOrganizationMember(actor, {
+        kind: "access",
+        memberId: "target-member",
+        status: "suspended",
+      })
+    ).resolves.toMatchObject({ changed: true });
   });
 
   it("uses active capacity without enabling identity or creating sessions", async () => {
@@ -533,16 +550,17 @@ describe("organization membership lifecycle service", () => {
     expect(mocks.inserts).toEqual([]);
   });
 
-  it("denies removing the last active owner or administrator", async () => {
+  it("denies removing the last active administrator, counting legacy Owner", async () => {
     mocks.queryResults.push(
       [{ id: "org-a" }],
       [{ id: "target-member", userId: "target-user", status: "active" }],
       [{ key: "organization.members.remove" }],
+      [{ membershipId: "target-member" }],
       [{ membershipId: "target-member" }]
     );
     await expect(
       manageOrganizationMember(actor, { kind: "remove", memberId: "target-member" })
-    ).rejects.toThrow("LAST_ACTIVE_OWNER");
+    ).rejects.toThrow("LAST_ACTIVE_ADMIN");
 
     mocks.queryResults.push(
       [{ id: "org-a" }],
@@ -555,6 +573,41 @@ describe("organization membership lifecycle service", () => {
       manageOrganizationMember(actor, { kind: "remove", memberId: "target-member" })
     ).rejects.toThrow("LAST_ACTIVE_ADMIN");
     expect(mocks.deletes).toEqual([]);
+  });
+
+  it("allows legacy Owner removal when another Admin remains, deduplicating aliases", async () => {
+    mocks.queryResults.push(
+      [{ id: "org-a" }],
+      [{ id: "target-member", userId: "target-user", status: "active" }],
+      [{ key: "organization.members.remove" }],
+      [{ membershipId: "target-member" }, { membershipId: "admin-member" }],
+      [{ membershipId: "target-member" }, { membershipId: "admin-member" }],
+      [{ total: 2 }]
+    );
+    await expect(
+      manageOrganizationMember(actor, { kind: "remove", memberId: "target-member" })
+    ).resolves.toMatchObject({ identityDeleted: false });
+    expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: "serializable",
+    });
+  });
+
+  it("denies suspension when duplicate Admin/Owner aliases are the same last membership", async () => {
+    mocks.queryResults.push(
+      [{ id: "org-a" }],
+      grants,
+      [{ id: "target-member", userId: "target-user", status: "active", disabledAt: null }],
+      [{ total: 2 }],
+      [{ membershipId: "target-member" }, { membershipId: "target-member" }]
+    );
+    await expect(
+      manageOrganizationMember(actor, {
+        kind: "access",
+        memberId: "target-member",
+        status: "suspended",
+      })
+    ).rejects.toThrow("LAST_ACTIVE_ADMIN");
+    expect(mocks.updates).toEqual([]);
   });
 
   it("preserves a restricted user's managing membership while another membership exists", async () => {

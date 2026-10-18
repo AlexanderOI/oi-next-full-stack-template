@@ -56,6 +56,7 @@ vi.mock("@/features/authorization/server", () => ({
 vi.mock("@/db/drizzle", () => ({
   db: {
     transaction: mocks.transaction,
+    select: () => query(mocks.selectRows.shift() ?? []),
     update: (table: unknown) => ({
       set: (values: unknown) => ({
         where: async (where: unknown) => {
@@ -70,6 +71,7 @@ vi.mock("@/db/drizzle", () => ({
 import {
   clearDeletedOrganizationSessionContext,
   deleteOrganization,
+  getOrganizationDeletionAvailability,
 } from "../../../src/features/organizations/lib/delete-organization";
 
 const owner = {
@@ -181,6 +183,38 @@ beforeEach(() => {
 });
 
 describe("organization deletion policy", () => {
+  it("allows protected Admin deletion and records its canonical authority", async () => {
+    mocks.selectRows = [
+      [{ id: "org-a", slug: "acme", name: "Acme" }],
+      [{ roleKey: "admin", isProtected: true, permissionKey: "organization.delete" }],
+      [],
+    ];
+    await expect(deleteOrganization(owner, "acme")).resolves.toMatchObject({
+      organizationId: "org-a",
+    });
+    expect((mocks.auditRecord?.metadata as { actor: { role: string } }).actor.role).toBe("admin");
+  });
+
+  it.each(["admin", "owner"])(
+    "offers deletion to protected %s with permission",
+    async (roleKey) => {
+      mocks.selectRows = [[{ roleKey, isProtected: true, permissionKey: "organization.delete" }]];
+      expect(await getOrganizationDeletionAvailability(owner.userId, "org-a")).toBe(true);
+    }
+  );
+
+  it.each([
+    { rows: [] },
+    { rows: [{ roleKey: "member", isProtected: true, permissionKey: "organization.delete" }] },
+    { rows: [{ roleKey: "admin", isProtected: false, permissionKey: "organization.delete" }] },
+    { rows: [{ roleKey: "admin", isProtected: true, permissionKey: "organization.update" }] },
+  ])(
+    "denies deletion availability without canonical administrator and permission: %j",
+    async ({ rows }) => {
+      mocks.selectRows = [rows];
+      expect(await getOrganizationDeletionAvailability(owner.userId, "org-a")).toBe(false);
+    }
+  );
   it("denies non-owners and actors without organization.delete without writes", async () => {
     mocks.selectRows = [
       [{ id: "org-a", slug: "acme", name: "Acme" }],

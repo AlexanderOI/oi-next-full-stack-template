@@ -125,22 +125,26 @@ async function updateAccess(
       .where(and(eq(member.userId, target.userId), eq(member.status, "active")));
     const isSoleActiveMembership = Number(activeMemberships?.total ?? 0) === 1;
 
-    const ownerRows = await executor
+    const adminRows = await executor
       .select({ membershipId: membershipRole.membershipId })
       .from(membershipRole)
       .innerJoin(role, eq(membershipRole.roleId, role.id))
       .innerJoin(member, eq(membershipRole.membershipId, member.id))
+      .innerJoin(user, eq(member.userId, user.id))
       .where(
         and(
           eq(member.organizationId, actor.organizationId),
           eq(member.status, "active"),
           eq(role.scope, "organization"),
-          eq(role.key, "owner"),
-          eq(role.isProtected, true)
+          or(eq(role.key, "admin"), eq(role.key, "owner")),
+          eq(role.isProtected, true),
+          isNull(role.organizationId),
+          isNull(user.disabledAt)
         )
       );
-    if (ownerRows.length <= 1 && ownerRows[0]?.membershipId === target.id) {
-      throw new Error("LAST_ACTIVE_OWNER");
+    const administratorIds = new Set(adminRows.map(({ membershipId }) => membershipId));
+    if (administratorIds.size <= 1 && administratorIds.has(target.id)) {
+      throw new Error("LAST_ACTIVE_ADMIN");
     }
 
     const now = new Date();
@@ -230,25 +234,8 @@ async function removeMember(
     if (!permissions.has(PERMISSIONS.ORGANIZATION_MEMBERS_REMOVE)) throw new Error("FORBIDDEN");
   }
 
-  const ownerRows = await executor
-    .select({ membershipId: membershipRole.membershipId })
-    .from(membershipRole)
-    .innerJoin(role, eq(membershipRole.roleId, role.id))
-    .innerJoin(member, eq(membershipRole.membershipId, member.id))
-    .where(
-      and(
-        eq(member.organizationId, actor.organizationId),
-        eq(member.status, "active"),
-        eq(role.scope, "organization"),
-        eq(role.key, "owner"),
-        eq(role.isProtected, true)
-      )
-    );
-  if (ownerRows.length <= 1 && ownerRows[0]?.membershipId === target.id) {
-    throw new Error("LAST_ACTIVE_OWNER");
-  }
-
-  const adminRows = await executor
+  // Lock canonical administrator assignments before evaluating enabled continuity.
+  await executor
     .select({ membershipId: membershipRole.membershipId })
     .from(membershipRole)
     .innerJoin(role, eq(membershipRole.roleId, role.id))
@@ -259,7 +246,27 @@ async function removeMember(
         eq(member.status, "active"),
         eq(role.scope, "organization"),
         or(eq(role.key, "admin"), eq(role.key, "owner")),
-        eq(role.isProtected, true)
+        eq(role.isProtected, true),
+        isNull(role.organizationId)
+      )
+    )
+    .for("update");
+
+  const adminRows = await executor
+    .select({ membershipId: membershipRole.membershipId })
+    .from(membershipRole)
+    .innerJoin(role, eq(membershipRole.roleId, role.id))
+    .innerJoin(member, eq(membershipRole.membershipId, member.id))
+    .innerJoin(user, eq(member.userId, user.id))
+    .where(
+      and(
+        eq(member.organizationId, actor.organizationId),
+        eq(member.status, "active"),
+        eq(role.scope, "organization"),
+        or(eq(role.key, "admin"), eq(role.key, "owner")),
+        eq(role.isProtected, true),
+        isNull(role.organizationId),
+        isNull(user.disabledAt)
       )
     );
   const administratorMembershipIds = new Set(adminRows.map(({ membershipId }) => membershipId));

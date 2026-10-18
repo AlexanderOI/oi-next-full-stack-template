@@ -1,5 +1,47 @@
 # Tenant-Only Administration
 
+Branch: `feat/multi-organization`. Delivery: independently verified work-unit commits; no publishing or live database writes.
+Runner: `bun run test:run`; focused Vitest paths, type-check, lint and formatting per unit.
+
+## Specs
+
+- S1 — Current authorization, verbatim: "Has lo que falta si tienes la documentacion suficiente".
+- S2 — Requested context, verbatim: "Quiero que ,e digas el estado del proyecto y en que quedamos en la ultima seseion".
+- Existing accepted behavior and safety requirements are preserved below in Confirmed product decisions, Constraints and safety, and Acceptance criteria, with the detailed compatibility contract in `docs/architecture/tenant-administration-transition.md`. These are prior recorded decisions, not newly invented verbatim user quotations.
+
+## Tasks
+
+- TENANT-ADMIN-001 | S1 | inline, complete | `b96f047`.
+- TENANT-ADMIN-002a | S1 | complete | `9388ccc`.
+- TENANT-ADMIN-002b | S1 | inline, blocked: required independent verifier admission denied | commit pending. Risk: item 2 (authorization); item 4 (concurrent administrator continuity).
+- TENANT-ADMIN-002c | S1 | pending, route determined after mapping | commit pending.
+- TENANT-ADMIN-003 | S1 | pending, route determined after mapping | commit pending.
+- TENANT-ADMIN-004 | S1 | pending, route determined after mapping | commit pending.
+- TENANT-ADMIN-005 | S1 | pending, depends on 003/004 | commit pending.
+- TENANT-ADMIN-006 | S1 | pending, route determined after mapping | commit pending.
+- TENANT-ADMIN-007 | S1 | independent verifier, pending | commit pending.
+
+## Log
+
+### L1 — Current continuation request (verbatim)
+
+"Has lo que falta si tienes la documentacion suficiente"
+
+### Resume reconciliation
+
+The full Engram observation #324 matches the preserved historical plan and commit evidence below. Search reports pending conflict annotations without alternative content; no unseen alternative is treated as authority. Git has five pre-existing modified files (task file, deletion/member helpers and their tests); preserve and verify them, without claiming earlier RED/GREEN evidence for this unfinished unit. Previous original feature-request wording is unavailable in this resumed context; do not fabricate it. Read-only mapping delegated because the remaining cross-feature security transition exceeds one bounded read batch.
+
+### Current verification and blocker
+
+- Mapping confirms 003/004 share authorization boundaries and must not use parallel writers on overlapping files. 006 is independent only after 002c retires transfer UI.
+- `bun run test:run tests/server/organizations/manage-organization-members.test.ts tests/server/organizations/delete-organization.test.ts`: exit 0, 39 tests passed in two files. This is current GREEN evidence only; no new RED claimed.
+- `bun run type-check`, scoped ESLint and Prettier on the four candidate source/test paths, and `git diff --check`: all exit 0.
+- ASSESS returned high risk via item 2 escalation; writer self-verification and a separate independent verifier are required. `reviewDue: false`, `reviewDueReason: under_budget`, RDD off.
+- Required verifier launch was denied by runtime admission despite the task explicitly naming Risk items 2 and 4. Exact response: "An independent verifier runs only for a change that declares a named high-risk item (`Risk: item N` from the Task Size list in the task). This change declares none: run its focused test and suite inline yourself now; do not retry the launch, and never add a Risk line or create a feature document only to get a verifier admitted."
+- No retry, bypass, commit, or further source changes. Unit remains unverified independently; no live DB or race proof. Human decision needed to restore verifier admission before resuming security-sensitive implementation. Full suite and remaining feature work have not been run/completed.
+
+### Preserved historical plan and evidence
+
 ## Objective
 
 Replace product-facing platform-wide administration with organization-scoped administration. A self-registered user owns a personal organization as its full-access Admin. Initially only Admin and Member are protected organization roles; Admin can create custom organization roles and manage users in that organization. Reuse the existing `/admin/roles` and `/admin/users` page experiences, scoped to the selected organization. Group the crowded organization components by responsibility.
@@ -49,7 +91,7 @@ Replace product-facing platform-wide administration with organization-scoped adm
 
 ## Verification evidence
 
-- TENANT-ADMIN-002a: Admin grant parity and signup compatibility written test-first (observed three RED failures; 16 GREEN tests). Independent verifier confirms 16 tests, type-check, Prettier, scoped lint and diff checks pass, but mocks do not establish real DB predicates or bootstrap persistence. Owner-only lifecycle changes remain pending; do not deploy this partial slice alone. Work-unit commit pending.
+- TENANT-ADMIN-002a: Admin grant parity and signup compatibility written test-first (observed three RED failures; 16 GREEN tests). Independent verifier confirms 16 tests, type-check, Prettier, scoped lint and diff checks pass, but mocks do not establish real DB predicates or bootstrap persistence. Owner-only lifecycle changes remain pending; do not deploy this partial slice alone. Work-unit commit: `9388ccc`.
 - TENANT-ADMIN-001: source-based inventory and non-destructive compatibility/rollout proposal recorded in `docs/architecture/tenant-administration-transition.md`; no live database touched. Independent read-only verification found no material factual problems. Scoped Prettier passed; `git diff --check` passed but does not include these still-untracked documents. No behavior tests apply to this documentation-only work unit. Work-unit commit: `b96f047`.
 
 ## Next step
